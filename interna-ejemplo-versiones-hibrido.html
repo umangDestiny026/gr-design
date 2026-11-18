@@ -1,0 +1,3246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GR Yaris | GAZOO Racing Colombia</title>
+<!-- EJEMPLO para desarrollo: misma interna que interna-general.html, pero con
+     2 versiones (carrusel en Especificaciones generales) y garantía híbrida
+     (dos garantías). Solo cambian los datos de MODEL: versions y warrantyHybrid. -->
+<meta name="description" content="GR Yaris: el hatchback homologado para rally, con motor 1.6L turbo de tres cilindros y tracción GR-FOUR. Colores, galería, diferenciales y versiones.">
+<link rel="icon" href="https://content.toyota.com.co/favicon-toyota.svg">
+
+<!-- ══════════════════════════════════════════════════════════════
+     LANDING INTERNA DE VEHÍCULO — plantilla GR
+     Mismo sistema que home.html: header, footer, botones, cards,
+     galería y lightbox se copiaron TAL CUAL del Home (este archivo es
+     autónomo, como el Home). Lo nuevo de la plantilla va prefijado
+     .gv- (GR Vehicle).
+
+     Todo el contenido del modelo vive en el objeto MODEL del <script>
+     final: para armar la landing de otro modelo se duplica este
+     archivo y se cambia ese objeto + el bloque del hero.
+══════════════════════════════════════════════════════════════ -->
+<style>
+/* ══════════════════════════════════════════════════════════════
+   TIPOGRAFÍAS OFICIALES
+   Toyota Type  → chrome del sitio (header, footer)
+   DecimaMonoPro → tipografía de GAZOO Racing. UN SOLO PESO (400):
+   por eso font-synthesis se apaga dentro de .gr — si no, el
+   navegador fabrica negritas engordando los trazos y los deforma.
+
+   Los .ttf viven en assets/fonts/ (descargados del CDN de Toyota).
+   Para producción conviene servirlos en .woff2 (pesan ~40% menos):
+   basta con agregar la línea del woff2 ANTES de la del ttf.
+══════════════════════════════════════════════════════════════ */
+@font-face{font-family:'ToyotaType';src:url('assets/fonts/toyota-type-light.ttf') format('truetype');font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:'ToyotaType';src:url('assets/fonts/toyota-type-book.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'ToyotaType';src:url('assets/fonts/toyota-type-semibold.ttf') format('truetype');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'ToyotaType';src:url('assets/fonts/toyota-type-bold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'DecimaMonoPro';src:url('assets/fonts/decima-mono-pro.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'DecimaMonoProLT';src:url('assets/fonts/decima-mono-pro-lt.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  /* ── Paleta GR (manual GR Brand Migration Ver.7) ──
+     GR RED #FF0000 es el rojo de marca, pero con texto blanco encima
+     solo da 4.0:1 → no pasa AA en texto normal. Por eso hay dos rojos:
+       --gr-red     → elementos GRÁFICOS (chips, cuadraditos, filetes)
+       --gr-red-ui  → superficies con TEXTO encima (5.1:1 sobre blanco)
+     Ojo: el rojo GR NO es el rojo Toyota (#EB0A1E). Son marcas distintas
+     desde que GR dejó de llevar el prefijo "Toyota". */
+  --gr-red:#FF0000;
+  --gr-red-ui:#DF001A;
+  --gr-red-dark:#A4091B;
+  --gr-gray:#9FA0A0;
+  --gr-black:#000000;
+  --toyota-red:#EB0A1E;
+
+  --ink:#16161a;
+  --ink-soft:#5b5b62;
+  --line:#e5e8ea;
+
+  /* ── Layout · grid de 12 columnas ──
+     Artboard 1920 · margen 40 · gutter 20 → columna de 135 px justos:
+       (1920 − 2·40 − 11·20) / 12 = 135
+     --wrap es el ancho EXTERIOR del contenedor: con box-sizing:border-box
+     se lleva adentro los dos márgenes de 40, así que el ancho útil son
+     1840. Encima de 1920 el contenido no crece, solo sobra margen. */
+  --wrap:1920px;
+  --pad-x:40px;
+  --gutter:20px;
+  /* Ancho de una columna, en píxeles reales. Se calcula con 100vw (igual
+     que en el grid móvil) para poder usarlo a cualquier profundidad del
+     DOM: con un porcentaje, el 100% se resolvería contra el contenedor
+     de turno y adentro de una card daría cualquier cosa. */
+  --col:calc((min(100vw, 1920px) - 2 * 40px - 11 * 20px) / 12);
+  --sec-y:clamp(36px,3.8vw,68px);
+  --header-h:64px;
+  --subnav-h:0px;   /* la sub-nav GR se eliminó; queda en 0 por si vuelve una barra propia */
+
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GRID MÓVIL — 4 columnas · margen 15 · gutter 20
+   A 390 px: columna = 75, y las columnas caen en
+     col1 15→90 · col2 110→185 · col3 205→280 · col4 300→375
+   --pad-x pasa a 15 px, así TODO lo que vive dentro de .wrap
+   (títulos, bajadas, botones, bandas) arranca sobre col1 y termina
+   sobre col4 sin cálculos extra.
+   --col se calcula con 100vw porque en móvil no hay scrollbar que
+   descontar; dentro de un contenedor con padding un % no serviría.
+══════════════════════════════════════════════════════════════ */
+@media (max-width:760px){
+  :root{
+    --pad-x:15px;
+    --gutter:20px;
+    --col:calc((100vw - 2 * 15px - 3 * 20px) / 4);
+    /* Ancho de carrusel: las 4 columnas completas + los 3 gutters de adentro.
+       La card ocupa el ancho útil entero (360 px a 390): se ve UNA sola,
+       sin asomo. Se pasa con los botones de abajo. */
+    --card-4col:calc(4 * var(--col) + 3 * var(--gutter));
+  }
+}
+
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:'ToyotaType',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  color:var(--ink);
+  background:#fff;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+img,svg,video{display:block;max-width:100%}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:3px solid var(--gr-red-ui);outline-offset:3px;border-radius:4px}
+
+/* width:100% para que .wrap no se encoja cuando su padre es flex o grid:
+   como ítem, con margin-inline:auto se ajustaría al contenido y dejaría
+   de marcar los márgenes del grid. */
+.wrap{width:100%;max-width:var(--wrap);margin-inline:auto;padding-inline:var(--pad-x)}
+/* Bloques que van de la columna 2 a la 11 (10 columnas), igual que el panel
+   de Síguenos. El max-width incluye los dos --pad-x porque hay
+   box-sizing:border-box, así que el CONTENIDO son las 10 columnas justas.
+   En móvil se desactiva solo: con la columna del grid de 4 el cálculo da más
+   que el viewport, no llega a limitar, y manda el width:100%. */
+.wrap.is-10col{max-width:calc(10 * var(--col) + 9 * var(--gutter) + 2 * var(--pad-x))}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Salto de sección: compensa header + subnav sticky al anclar */
+[id]{scroll-margin-top:calc(var(--header-h) + var(--subnav-h) + 12px)}
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER GR — barra propia, ya no la réplica de toyota.com.co
+   Negra y translúcida con desenfoque: sobre el hero se funde con
+   el GIF y sobre las secciones blancas (galería, Síguenos) se lee
+   como una barra oscura deliberada. El desenfoque obliga a un
+   fondo semitransparente, así que hay @supports de respaldo.
+   Tipografía: DecimaMonoPro en versalitas, como el resto de GR.
+══════════════════════════════════════════════════════════════ */
+.t-header{
+  position:sticky;top:0;z-index:1000;
+  background:rgba(10,10,12,.72);
+  -webkit-backdrop-filter:blur(16px) saturate(130%);
+  backdrop-filter:blur(16px) saturate(130%);
+  border-bottom:1px solid rgba(255,255,255,.14);
+  color:#fff;
+}
+@supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
+  .t-header{background:#0b0b0d}
+}
+.t-header a{text-decoration:none;color:inherit}
+.t-header-inner{
+  max-width:var(--wrap);margin-inline:auto;
+  padding-inline:var(--pad-x);
+  height:var(--header-h);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:clamp(14px,2vw,40px);
+}
+.t-logo{display:flex;align-items:center;flex-shrink:0}
+.t-logo img{height:clamp(17px,1.4vw,23px);width:auto;display:block}
+
+.t-nav{display:flex;align-items:center;gap:clamp(16px,2.1vw,38px)}
+.t-nav-link{
+  position:relative;
+  font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-synthesis:none;
+  font-size:clamp(10.5px,.82vw,13px);
+  letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;
+  color:rgba(255,255,255,.72);
+  padding-block:7px;
+  transition:color .2s;
+}
+.t-nav-link:hover{color:#fff}
+.t-nav-link.is-current{color:#fff}
+/* Subrayado en el paralelogramo GR, el mismo sesgo de los botones */
+.t-nav-link::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:var(--gr-red);
+  transform:skewX(-14deg) scaleX(0);transform-origin:left center;
+  transition:transform .28s var(--ease);
+}
+.t-nav-link:hover::after,
+.t-nav-link.is-current::after{transform:skewX(-14deg) scaleX(1)}
+/* Galón rojo en Garaje GR y Alquila, las mismas dos que lo llevan en
+   gazooracing.com.co. Va en su propio <i> y no en un ::after porque ese
+   pseudo ya lo ocupa el subrayado sesgado de hover/activo. */
+.t-nav-caret{
+  display:inline-block;vertical-align:middle;
+  width:5px;height:5px;margin-left:9px;
+  border-right:2px solid var(--gr-red);border-bottom:2px solid var(--gr-red);
+  transform:translateY(-2px) rotate(45deg);
+  transition:transform .28s var(--ease);
+}
+/* Garaje GR abre el mega-menú, así que es un <button> y no un enlace: el
+   texto y el galón son un solo disparador. Comparte .t-nav-link con el resto
+   de la nav para que se vea igual. */
+.t-nav-link[aria-expanded="true"] .t-nav-caret{transform:translateY(1px) rotate(225deg)}
+
+/* ── Mega-menú de Garaje GR ──
+   Cuelga del header sticky, así que va absoluto respecto de él y se
+   superpone al contenido en vez de empujarlo. Blanco y opaco: las fotos del
+   catálogo vienen sobre blanco, así que se funden con el panel en vez de
+   quedar como recuadros recortados. */
+.t-mega{
+  position:absolute;top:100%;left:0;right:0;
+  background:#fff;color:var(--ink);
+  border-bottom:1px solid var(--line);
+  padding-block:clamp(26px,2.6vw,44px) clamp(30px,3vw,52px);
+  /* Con los siete modelos el panel mide más que la ventana en todos los
+     tamaños (1151 px a 1920×1080), así que se recorta al hueco que deja el
+     header y scrollea por dentro; sin esto la última card quedaba cortada y
+     fuera de alcance. dvh va segundo por el navegador móvil. */
+  max-height:calc(100vh - var(--header-h));
+  max-height:calc(100dvh - var(--header-h));
+  overflow-y:auto;overscroll-behavior:contain;
+  opacity:0;visibility:hidden;transform:translateY(-10px);
+  transition:opacity .26s var(--ease),transform .26s var(--ease),visibility .26s;
+}
+.t-mega.is-open{opacity:1;visibility:visible;transform:none}
+.t-mega-tab{
+  margin-bottom:clamp(24px,2.4vw,40px);
+  padding-bottom:12px;text-align:center;
+  font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-synthesis:none;
+  font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);
+}
+/* Subrayado corto y centrado bajo la pestaña, con el sesgo GR */
+.t-mega-tab::after{
+  content:'';display:block;width:132px;height:2px;
+  margin:12px auto 0;background:var(--gr-red);
+  transform:skewX(-14deg);
+}
+.t-mega-grid{
+  list-style:none;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:clamp(38px,4.2vw,74px) clamp(36px,4.6vw,88px);
+}
+.t-mega-card{display:flex;flex-direction:column}
+.t-mega-name{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  /* Tipografía GR (DecimaMonoPro, un solo peso: sin negrita sintética) */
+  font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;font-synthesis:none;
+  font-size:clamp(15px,1.15vw,19px);font-weight:400;letter-spacing:.04em;color:var(--ink);
+}
+/* Mismo paralelogramo que los botones GR: skewX en la caja y contra-skew en
+   el hijo, para que el texto no salga inclinado. */
+.t-mega-tag{
+  flex-shrink:0;
+  padding:5px 13px;border-radius:5px;
+  background:var(--gr-red-ui);transform:skewX(-14deg);
+  font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-synthesis:none;
+  font-size:10.5px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;
+  color:#fff;
+}
+.t-mega-tag>span{display:inline-block;transform:skewX(14deg)}
+/* Las fotos del catálogo vienen sobre blanco (solo Yaris y RAV4 son
+   transparentes), así que sobre el panel blanco se funden sin necesidad de
+   tarjeta. El tope de alto sí hace falta: sin él, a 1920 la foto crece con la
+   columna y el panel se va a ~940 px, casi la ventana entera. */
+.t-mega-shot{
+  width:100%;height:auto;
+  aspect-ratio:290/133;object-fit:contain;
+  margin:clamp(14px,1.4vw,24px) 0;
+  max-height:clamp(110px,10vw,180px);
+}
+/* Los dos enlaces a los extremos, cada uno con su propio subrayado. Sin regla
+   al pie de la card: sumada a esos subrayados quedaban dos líneas seguidas. */
+.t-mega-links{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;
+  margin-top:auto;
+  font-size:clamp(13px,1vw,15px);
+}
+.t-mega-links a{
+  color:var(--ink);
+  text-decoration:underline;text-underline-offset:5px;
+  text-decoration-color:rgba(10,10,15,.3);
+  transition:color .2s,text-decoration-color .2s;
+}
+.t-mega-links a:hover{color:var(--gr-red-ui);text-decoration-color:var(--gr-red-ui)}
+
+.t-wa{
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.1);
+  transition:background .22s,transform .22s var(--ease);
+}
+.t-wa:hover{background:var(--gr-red-ui);transform:translateY(-2px)}
+/* El SVG de WhatsApp viene en oscuro: el filtro lo aplana a blanco. */
+.t-wa img{width:17px;height:17px;filter:brightness(0) invert(1)}
+
+.t-burger{display:none;color:#fff;padding:6px;margin-right:-6px}
+.t-burger svg{display:block;width:24px;height:24px}
+.t-mobile{display:none}
+
+/* Con los seis enlaces + logo + WhatsApp el header entra hasta ~900, pero ahí
+   quedan 25 px entre el logo y el primer enlace y se ve apretado. A 1024 aún
+   sobran ~130. Por debajo, panel. */
+@media (max-width:1024px){
+  .t-nav{display:none}
+  .t-burger{display:block}
+
+  .t-mobile{
+    display:block;position:fixed;inset:0;z-index:9999;
+    background:#0b0b0d;color:#fff;
+    transform:translateX(100%);
+    transition:transform .32s var(--ease);
+    overflow-y:auto;overscroll-behavior:contain;
+  }
+  .t-mobile.is-open{transform:translateX(0)}
+  /* El panel es hermano de <header>, no hijo: no le llega el
+     .t-header a{text-decoration:none} y los enlaces salían subrayados. */
+  .t-mobile a{text-decoration:none;color:inherit}
+  .t-mobile-head{
+    display:flex;justify-content:space-between;align-items:center;
+    height:var(--header-h);padding-inline:var(--pad-x);
+    border-bottom:1px solid rgba(255,255,255,.14);
+  }
+  .t-mobile-head img{height:20px;width:auto}
+  .t-mobile-close{font-size:26px;line-height:1;padding:4px 6px;color:#fff}
+  /* DecimaMonoPro en versalitas, como la nav del desktop y el resto de GR.
+     font-synthesis:none es obligatorio: el panel vive FUERA de .gr, que es
+     donde está la regla global, y Decima trae un solo peso — sin esto el
+     navegador falsearía negritas y ensuciaría el trazo. */
+  .t-mobile{
+    font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-synthesis:none;
+  }
+  /* ⚠️ width:100% y text-align:left porque "Garaje GR" es un <button>: sin
+     eso se encoge al ancho de su texto, el galón se pega a la palabra y el
+     filete de la fila se queda a medias. */
+  .t-mobile-flat{
+    position:relative;display:block;width:100%;text-align:left;
+    padding:19px var(--pad-x);
+    border-bottom:1px solid rgba(255,255,255,.1);
+    font-size:18px;letter-spacing:.12em;text-transform:uppercase;
+    color:rgba(255,255,255,.82);
+    transition:color .2s,background .2s;
+  }
+  /* Marca de página actual: barra roja en el canal izquierdo. Va absoluta
+     para no correr el texto respecto de las demás filas. */
+  .t-mobile-flat.is-current{color:#fff}
+  .t-mobile-flat.is-current::before{
+    content:'';position:absolute;left:0;top:14px;bottom:14px;
+    width:3px;background:var(--gr-red);
+  }
+  .t-mobile-flat:hover,.t-mobile-flat:active{color:#fff;background:rgba(255,255,255,.04)}
+  /* Galón rojo solo en las filas que lo llevan en gazooracing.com.co: allá son
+     las que abren submenú (Garaje GR y Alquila); las otras dos van limpias. */
+  .t-mobile-flat--sub{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .t-mobile-flat--sub::after{
+    content:'';flex-shrink:0;width:7px;height:7px;
+    border-top:2px solid var(--gr-red);border-right:2px solid var(--gr-red);
+    transform:rotate(45deg);
+  }
+
+  /* Cotizador, Concesionarios y WhatsApp cierran como grupo aparte: sin
+     filetes entre ellos y con aire arriba. Son utilidades, no secciones de la
+     página. La jerarquía la hacen el tamaño y el tracking, NO una negrita:
+     Decima trae un peso y engordarlo sería sintético. */
+  .t-mobile-util{
+    display:flex;flex-direction:column;align-items:flex-start;
+    gap:18px;padding:28px var(--pad-x) 36px;
+  }
+  .t-mobile-util a{font-size:18px;letter-spacing:.12em;text-transform:uppercase;color:#fff}
+  .t-mobile-wa{
+    display:flex;align-items:center;justify-content:center;
+    width:40px;height:40px;border-radius:50%;
+    background:rgba(255,255,255,.1);
+    transition:background .22s,transform .22s var(--ease);
+  }
+  .t-mobile-wa:hover{background:var(--gr-red-ui);transform:translateY(-2px)}
+  .t-mobile-wa img{width:19px;height:19px;filter:brightness(0) invert(1)}
+
+  /* ── Sub-panel de Garaje GR ──
+     Entra deslizando desde la derecha sobre el panel, igual que en
+     gazooracing.com.co. Blanco como el mega-menú del desktop: las fotos del
+     catálogo vienen sobre blanco y así se funden con el fondo.
+     ⚠️ position:fixed y no absolute: .t-mobile scrollea, y con absolute el
+     sub-panel se posicionaría contra el alto del contenido y se iría con el
+     scroll. Como .t-mobile lleva transform, el fixed se ancla a su caja —que
+     es justo lo que se quiere— y no al viewport. */
+  .t-msub{
+    position:fixed;inset:0;z-index:2;
+    display:flex;flex-direction:column;
+    background:#fff;color:var(--ink);
+    /* Vuelve a Toyota Type: el panel padre impone DecimaMonoPro y los nombres
+       de los modelos, que son negrita, se quedaban en el mono de un solo peso. */
+    font-family:'ToyotaType',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    transform:translateX(100%);
+    transition:transform .3s var(--ease);
+    overflow-y:auto;overscroll-behavior:contain;
+  }
+  .t-msub.is-open{transform:translateX(0)}
+  /* Más alta que el header de la página: acá los tres controles son el único
+     contenido de la barra y con 64 px quedaban apretados. */
+  .t-msub-head{
+    position:sticky;top:0;z-index:2;background:#fff;
+    display:flex;align-items:center;gap:12px;
+    min-height:82px;padding-inline:var(--pad-x);
+    border-bottom:1px solid var(--line);
+  }
+  .t-msub-back{color:var(--ink);padding:6px;margin-left:-6px;line-height:0}
+  .t-msub-back svg{width:22px;height:22px;display:block}
+  .t-msub-title{
+    flex:1 1 auto;text-align:center;
+    font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-synthesis:none;
+    font-size:14px;letter-spacing:.14em;text-transform:uppercase;
+  }
+  .t-msub-close{font-size:24px;line-height:1;padding:4px 6px;color:var(--ink)}
+  .t-msub-tab{
+    padding:20px var(--pad-x) 0;
+    font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-synthesis:none;
+    font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+    color:rgba(10,10,15,.55);
+  }
+  .t-msub-list{list-style:none;padding:0 var(--pad-x) 40px}
+  /* Las tarjetas son las mismas del mega-menú (el JS las clona), así que
+     heredan .t-mega-*; acá solo se apilan y se separan con filete. */
+  .t-msub-list .t-mega-card{padding:24px 0;border-bottom:1px solid var(--line)}
+  .t-msub-list .t-mega-card:last-child{border-bottom:0}
+  .t-msub-list .t-mega-shot{max-height:none;margin:18px 0}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ZONA GR — todo lo que va dentro de <main class="gr">
+   font-synthesis:none → DecimaMonoPro trae UN peso real; sin esto
+   el navegador falsea negritas engordando el trazo y lo ensucia.
+══════════════════════════════════════════════════════════════ */
+.gr{
+  font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-synthesis:none;
+  background:#000;
+  color:#fff;
+}
+.gr *:not(svg):not(path):not(polygon){font-family:inherit}
+/* Ningún enlace de la zona GR va subrayado: los CTA son botones y el
+   subrayado del user-agent les ensuciaba la caja. */
+.gr a{text-decoration:none}
+
+/* Encabezado de sección compartido */
+.gr-head{margin-bottom:clamp(16px,1.9vw,34px)}
+/* "Conoce más" de Los inicios. En el DOM va al final de la sección, que es su
+   sitio en móvil: debajo de los botones del carrusel, centrado y a 3 columnas.
+   En desktop el grid del .wrap lo sube a la fila del encabezado, pegado al
+   borde derecho del contenido —el mismo borde de la última card. */
+@media (min-width:761px){
+  #historia>.wrap{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    column-gap:clamp(18px,2.4vw,56px);
+  }
+  #historia>.wrap>.gr-head{grid-area:1 / 1}
+  #historia>.wrap>.gr-tl-more{
+    grid-area:1 / 2;justify-self:end;align-self:end;
+    /* El mismo margen inferior que .gr-head, para que las dos cajas terminen
+       a la misma altura y el botón asiente sobre la línea base de la bajada. */
+    margin-bottom:clamp(16px,1.9vw,34px);
+  }
+  #historia>.wrap>.gr-timeline{grid-area:2 / 1 / 3 / 3}
+  #historia>.wrap>.gr-tl-nav{grid-area:3 / 1 / 4 / 3}
+}
+@media (max-width:760px){
+  /* ⚠️ Doble clase a propósito: .gr-btn{display:inline-flex} está definido más
+     abajo en la hoja y con una sola clase le ganaba por orden. En inline-flex
+     los márgenes auto valen 0 y el botón no se centraba. */
+  .gr-btn.gr-tl-more{
+    display:flex;justify-content:center;
+    width:calc(3 * var(--col) + 2 * var(--gutter));
+    margin:clamp(18px,2.4vh,30px) auto 0;
+  }
+}
+.gr-eyebrow{
+  display:inline-block;
+  font-size:clamp(11px,.85vw,14px);
+  letter-spacing:.28em;text-transform:uppercase;
+  color:var(--gr-gray);margin-bottom:clamp(10px,1vw,18px);
+}
+.gr-title{
+  font-size:clamp(22px,2.8vw,44px);
+  font-weight:400;letter-spacing:.14em;line-height:1.08;
+  text-transform:uppercase;color:var(--gr-red);
+}
+.gr-lead{
+  margin-top:clamp(12px,1.2vw,22px);
+  font-size:clamp(14px,1.15vw,20px);
+  line-height:1.5;color:rgba(255,255,255,.72);
+  max-width:92ch;
+}
+.gr-lead b{font-weight:400;color:#fff
+}
+.gr-section{padding:var(--sec-y) 0;border-top:1px solid rgba(255,255,255,.08)}
+
+/* ── Botón GR ──
+   El paralelogramo de los sitios de GR en USA y Japón: skewX en el
+   botón y contra-skew en el hijo. No se usa clip-path porque anula
+   el border-radius. */
+.gr-btn{
+  display:inline-flex;align-items:center;gap:12px;
+  padding:clamp(14px,1.1vw,19px) clamp(26px,2.2vw,40px);
+  background:#fff;color:#0a0a0a;
+  border-radius:8px;transform:skewX(-14deg);
+  font-size:clamp(11px,.92vw,15px);
+  letter-spacing:.14em;text-transform:uppercase;
+  transition:background .2s,transform .16s var(--ease),box-shadow .2s;
+}
+.gr-btn>span{display:inline-flex;align-items:center;gap:12px;transform:skewX(14deg)}
+.gr-btn svg{width:1.1em;height:1.1em;flex-shrink:0}
+.gr-btn:hover{background:#e8e8e8;transform:skewX(-14deg) translateY(-2px)}
+.gr-btn:active{transform:skewX(-14deg) scale(.97)}
+.gr-btn--red{background:var(--gr-red-ui);color:#fff;box-shadow:0 10px 30px -12px rgba(223,0,26,.7)}
+.gr-btn--red:hover{background:#f00a26}
+.gr-btn--ghost{background:transparent;color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5)}
+.gr-btn--ghost:hover{background:rgba(255,255,255,.1)}
+
+/* ══════════════════════════════════════════════════════════════
+   GR GARAGE — cards de vehículo (marco blanco, cuerpo gris)
+   Carrusel: 3 visibles en desktop, 2 en tablet, 1.1 en móvil.
+══════════════════════════════════════════════════════════════ */
+/* ── Bloque de modelos ────────────────────────────────────────
+   Desktop: dos columnas. El encabezado va arriba a la izquierda y la
+   navegación justo debajo; el carrusel ocupa la columna derecha entera.
+   El orden del DOM es head → cards → nav (el que necesita el móvil), así
+   que acá el grid reubica la nav a la fila 2 de la columna izquierda. */
+.gr-models{
+  display:grid;
+  grid-template-columns:minmax(200px,22%) 1fr;
+  grid-template-rows:auto 1fr;
+  gap:clamp(18px,2vw,38px) clamp(20px,2.4vw,56px);
+  align-items:start;
+}
+.gr-models-head{grid-column:1;grid-row:1}
+.gr-models .gr-vgrid{grid-column:2;grid-row:1 / span 2}
+.gr-models > .gr-vnav{grid-column:1;grid-row:2;justify-content:flex-start;align-self:start}
+.gr-models-head .gr-lead{max-width:34ch;font-size:clamp(13px,1vw,17px)}
+@media (max-width:1360px){
+  /* Apilado: el orden del DOM ya deja los botones DEBAJO de las cards */
+  /* stretch explícito: la regla base pone align-items:start y, en un flex
+     en columna, eso es el eje TRANSVERSAL — dejaba el carrusel encogido a
+     su contenido en vez de ocupar el ancho. */
+  .gr-models{display:flex;flex-direction:column;align-items:stretch;gap:clamp(16px,2.2vh,30px)}
+  /* align-self:stretch por el mismo motivo que el align-items de arriba:
+     sin él la nav se encoge a su contenido y el center no tiene qué centrar. */
+  .gr-models > .gr-vnav{justify-content:center;align-self:stretch}
+  .gr-models-head .gr-lead{max-width:none}
+}
+
+.gr-vgrid{
+  display:grid;grid-auto-flow:column;
+  grid-auto-columns:calc((100% - 2 * clamp(14px,1.4vw,30px)) / 3);
+  gap:clamp(14px,1.4vw,30px);
+  overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  scrollbar-width:none;
+  /* overflow-x fuerza overflow-y auto → el padding evita que se
+     recorte la sombra al pie de las cards */
+  padding:4px 0 clamp(6px,.6vw,12px);
+}
+.gr-vgrid::-webkit-scrollbar{display:none}
+.gr-vgrid>*{scroll-snap-align:start}
+@media (max-width:1000px){
+  .gr-vgrid{grid-auto-columns:calc((100% - clamp(14px,1.4vw,30px)) / 2)}
+}
+
+/* ── Card ──
+   Todo lo de adentro se dimensiona en cqi (1cqi = 1% del ancho de la card),
+   no en vw: así la card escala como una pieza cuando cambia de ancho, en vez
+   de mantener un texto de tamaño fijo dentro de una caja que se achica.
+   Los clamp() ponen el piso de legibilidad y el techo. */
+.gr-vcard{
+  container-type:inline-size;
+  display:block;height:100%;
+  background:#fff;border-radius:clamp(14px,5.4cqi,26px);
+  padding:clamp(6px,2.7cqi,11px);
+  box-shadow:0 clamp(12px,1.3vw,30px) clamp(30px,3.2vw,74px) -18px rgba(0,0,0,.75);
+  transition:transform .28s var(--ease),box-shadow .28s;
+}
+.gr-vcard:hover{
+  transform:translateY(-6px);
+  box-shadow:0 clamp(18px,2vw,44px) clamp(40px,4.4vw,100px) -18px rgba(0,0,0,.85);
+}
+.gr-vcard-body{
+  background:#d9d9db;border-radius:clamp(10px,4cqi,20px);
+  overflow:hidden;display:flex;flex-direction:column;height:100%;
+}
+.gr-vcard-photo{position:relative;aspect-ratio:7/5;overflow:hidden;flex:0 0 auto}
+/* cover, no contain: con contain la Fortuner y la Hilux —más altas que
+   el recuadro— dejaban franjas grises a los lados. Los recortes van de 1,23
+   a 1,43 y promedian ~1,36, así que a 7/5 el recorte cae sobre el margen
+   transparente del PNG, no sobre el vehículo. */
+.gr-vcard-photo img{
+  width:100%;height:100%;object-fit:cover;
+  transition:transform .6s var(--ease);
+}
+.gr-vcard:hover .gr-vcard-photo img{transform:scale(1.05)}
+.gr-vcard-info{
+  padding:clamp(12px,4.7cqi,20px) clamp(12px,4.7cqi,20px) clamp(12px,4.5cqi,19px);
+  display:flex;flex-direction:column;gap:clamp(7px,2.7cqi,12px);
+  flex:1 1 auto;
+}
+/* Chips con la forma inclinada de los botones GR */
+.gr-chips{
+  /* La altura de un chip la manda el ÍCONO (1.35em), no el texto: si la
+     reserva se calcula sobre el texto queda un par de px corta, y la card
+     que sí usa dos filas se estira respecto a las de una → los nombres
+     dejan de alinearse. Con --chip-h fijado en el propio chip, dos filas
+     miden exactamente lo reservado. */
+  --chip-f:clamp(8.5px,3.2cqi,13px);
+  --chip-py:clamp(3.5px,1.5cqi,7px);
+  --chip-h:calc(var(--chip-f) * 1.35 + 2 * var(--chip-py));
+  --chip-gap:clamp(6px,2.3cqi,11px);
+  display:flex;flex-wrap:wrap;gap:var(--chip-gap);
+  min-height:calc(2 * var(--chip-h) + var(--chip-gap));
+  align-content:flex-start;
+}
+.gr-chip{
+  display:inline-flex;align-items:center;
+  min-height:var(--chip-h);
+  padding:0 clamp(8px,3cqi,13px);
+  background:#fff;color:#16161a;
+  border-radius:clamp(3px,1cqi,6px);
+  font-size:var(--chip-f);
+  transform:skewX(-14deg);
+}
+.gr-chip>span{
+  display:inline-flex;align-items:center;gap:clamp(4px,1.6cqi,8px);
+  transform:skewX(14deg);
+}
+.gr-chip svg{width:1.35em;height:1.35em;flex-shrink:0;color:var(--gr-red)}
+/* Sin pesos que jugar (DecimaMonoPro trae uno solo): la jerarquía entre
+   modelo y versión la hace el color, no la negrita. */
+.gr-vcard-name{
+  --name-f:clamp(15px,5.7cqi,24px);
+  font-size:var(--name-f);font-weight:400;line-height:1.08;
+  /* Dos líneas reservadas: el GR Yaris no lleva versión debajo y sin
+     esto su bloque quedaba más corto que el de las otras seis. */
+  min-height:calc(var(--name-f) * 1.08 * 2);
+  letter-spacing:-.01em;color:#16161a;
+}
+.gr-vcard-variant{display:block;color:#8b8b91}
+.gr-vcard-desc{
+  font-size:clamp(10px,3.7cqi,15px);line-height:1.45;
+  text-wrap:balance;color:#5b5b62;
+}
+/* CTA rojo GR (#DF001A, no #FF0000: con el rojo puro el blanco no pasa AA).
+   margin-top:auto ancla el botón abajo para que los siete queden parejos.
+   El font-weight:700 es sintético (Decima trae un peso), pero en mayúsculas
+   y con tracking se lee limpio; el text-stroke lo remata. */
+.gr-vcard-cta{
+  align-self:flex-start;margin-top:auto;
+  background:var(--gr-red-ui);color:#fff;
+  font-weight:700;-webkit-text-stroke:.03em currentColor;
+  padding:clamp(9px,3cqi,15px) clamp(14px,5cqi,28px);
+  font-size:clamp(9px,3.4cqi,13px);
+}
+.gr-vcard-cta:hover{background:var(--gr-red-dark);transform:skewX(-14deg) translateY(-2px)}
+
+/* Navegación del carrusel — botones blancos: negros serían invisibles
+   contra el fondo de la sección. */
+.gr-vnav{display:flex;align-items:center;justify-content:center;gap:clamp(20px,2vw,48px)}
+.gr-vnav-btn{
+  width:clamp(42px,3vw,54px);height:clamp(42px,3vw,54px);
+  border-radius:50%;background:#fff;color:#0a0a0a;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:transform .16s var(--ease),opacity .2s,background .2s;
+}
+.gr-vnav-btn:hover{background:#e8e8e8;transform:scale(1.06)}
+.gr-vnav-btn:active{transform:scale(.92)}
+.gr-vnav-btn[disabled]{opacity:.25;pointer-events:none}
+.gr-vnav-btn svg{width:42%;height:42%}
+.gr-vnav-count{
+  font-size:clamp(14px,1.15vw,24px);color:#fff;
+  font-variant-numeric:tabular-nums;min-width:7ch;text-align:center;
+}
+/* Una card por vista (4 columnas completas), igual que la historia */
+@media (max-width:760px){
+  .gr-vgrid{
+    grid-auto-columns:var(--card-4col);gap:var(--gutter);
+    margin-inline:calc(var(--pad-x) * -1);
+    padding-inline:var(--pad-x);
+    scroll-padding-inline:var(--pad-x);   /* ver nota en .gr-timeline */
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GALERÍA — bento sobre blanco. Es el respiro claro de la página,
+   entre el negro de los modelos y el negro del cierre.
+══════════════════════════════════════════════════════════════ */
+.gr-gallery{background:#fff;color:var(--ink);padding:var(--sec-y) 0}
+.gr-gallery .gr-title{color:var(--gr-red-ui)}
+.gr-gallery .gr-lead{color:rgba(10,10,15,.6)}
+.gr-gallery .gr-eyebrow{color:#8a8a92}
+.gr-gal-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  grid-auto-rows:clamp(96px,9.7vw,168px);
+  gap:clamp(10px,1.1vw,22px);
+}
+.gr-gal-item{
+  position:relative;overflow:hidden;
+  border-radius:clamp(12px,1.2vw,26px);
+  background:#ededef;cursor:pointer;border:0;padding:0;
+  transition:transform .3s var(--ease);
+}
+.gr-gal-item img{width:100%;height:100%;object-fit:cover;transition:transform .7s var(--ease)}
+/* La celda de nieve es muy apaisada y el recorte centrado dejaba el auto
+   afuera: vive entre el 65 y el 88% del alto del original. Se referencia por
+   src y no por :nth-child para que aguante un reordenamiento de la galería. */
+.gr-gal-item img[src$="gr86-snow.jpg"]{object-position:center 85%}
+.gr-gal-item::after{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(to bottom,transparent 52%,rgba(0,0,0,.68));
+}
+.gr-gal-item:hover img{transform:scale(1.06)}
+.gr-gal-item:active{transform:scale(.985)}
+.gr-gal-cap{
+  position:absolute;left:clamp(12px,1vw,24px);bottom:clamp(10px,.9vw,20px);
+  z-index:2;color:#fff;
+  font-size:clamp(10px,.8vw,16px);
+  letter-spacing:.14em;text-transform:uppercase;
+}
+/* Bento curado: 4 col × 3 filas = 12 celdas, 7 imágenes */
+.gr-gal-item:nth-child(1){grid-column:1/span 2;grid-row:1/span 2}
+.gr-gal-item:nth-child(2){grid-column:3;grid-row:1}
+.gr-gal-item:nth-child(3){grid-column:4;grid-row:1}
+.gr-gal-item:nth-child(4){grid-column:3/span 2;grid-row:2}
+.gr-gal-item:nth-child(5){grid-column:1/span 2;grid-row:3}
+.gr-gal-item:nth-child(6){grid-column:3/span 2;grid-row:3}
+@media (max-width:900px){
+  .gr-gal-grid{grid-template-columns:repeat(2,1fr);grid-auto-rows:clamp(120px,26vw,190px)}
+  .gr-gal-item:nth-child(n){grid-column:auto;grid-row:auto}
+  .gr-gal-item:nth-child(1){grid-column:1/span 2;grid-row:span 2}
+  .gr-gal-item:nth-child(6){grid-column:1/span 2}
+}
+@media (max-width:760px){
+  /* Sobre el grid de 4 columnas: con gutter 20 cada pieza mide 2 columnas
+     exactas (170 px a 390) y la grande, las 4. */
+  .gr-gal-grid{gap:var(--gutter)}
+}
+.gr-disclaimer{
+  margin-top:clamp(14px,1.4vw,30px);text-align:center;
+  font-size:clamp(11px,.9vw,17px);color:rgba(10,10,15,.45);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LIGHTBOX de la galería
+══════════════════════════════════════════════════════════════ */
+.gr-lb{
+  position:fixed;inset:0;z-index:2000;
+  display:flex;align-items:center;justify-content:center;
+  padding:clamp(16px,4vw,60px);
+  opacity:0;pointer-events:none;transition:opacity .28s var(--ease);
+}
+.gr-lb[aria-hidden="false"]{opacity:1;pointer-events:auto}
+.gr-lb-backdrop{position:absolute;inset:0;background:rgba(4,4,6,.94);backdrop-filter:blur(14px)}
+.gr-lb-frame{position:relative;z-index:1;display:inline-block;line-height:0;max-width:100%;max-height:100%}
+.gr-lb-img{
+  /* Marco fijo 16:10 para todas las fotos: verticales, cuadradas y
+     apaisadas se ven del mismo tamaño al navegar. La foto llena el marco
+     (cover) y respeta el punto focal de la galería (pos). */
+  display:block;width:min(88vw,calc(78vh * 16 / 10));height:auto;aspect-ratio:16/10;
+  object-fit:cover;background:#111;
+  border-radius:clamp(8px,.9vw,18px);
+  box-shadow:0 40px 120px -20px rgba(0,0,0,.7);
+}
+.gr-lb-close{
+  position:absolute;bottom:100%;right:0;margin-bottom:12px;z-index:5;
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.16);backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.28);color:#fff;
+  padding:11px 22px;border-radius:100px;
+  font-family:'DecimaMonoPro',monospace;
+  font-size:clamp(11px,.9vw,15px);letter-spacing:.12em;text-transform:uppercase;
+  transition:background .2s,transform .15s;
+}
+.gr-lb-close:hover{background:rgba(255,255,255,.3)}
+.gr-lb-close:active{transform:scale(.96)}
+.gr-lb-close svg{width:1.1em;height:1.1em}
+.gr-lb-nav{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:3;
+  width:clamp(48px,4.4vw,84px);height:clamp(48px,4.4vw,84px);
+  border-radius:50%;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.24);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  transition:background .2s,transform .15s;
+}
+.gr-lb-nav:hover{background:rgba(255,255,255,.28)}
+.gr-lb-nav:active{transform:translateY(-50%) scale(.92)}
+.gr-lb-nav svg{width:40%;height:40%}
+.gr-lb-prev{left:clamp(10px,2vw,48px)}
+.gr-lb-next{right:clamp(10px,2vw,48px)}
+.gr-lb-cap{
+  position:absolute;left:50%;bottom:clamp(18px,2.4vw,50px);
+  transform:translateX(-50%);z-index:3;
+  display:flex;align-items:center;gap:14px;
+  padding:11px 22px;border-radius:100px;
+  background:rgba(255,255,255,.1);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.16);color:#fff;
+  font-family:'DecimaMonoPro',monospace;white-space:nowrap;
+}
+.gr-lb-label{font-size:clamp(11px,.9vw,15px);letter-spacing:.14em;text-transform:uppercase}
+.gr-lb-count{font-size:clamp(11px,.85vw,14px);color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums}
+body.gr-lb-open{overflow:hidden}
+/* Móvil: las flechas bajan debajo de la foto (no encima). El visor pasa a
+   una reja: foto arriba a todo el ancho, flechas abajo lado a lado. */
+@media (max-width:760px){
+  .gr-lb{display:grid;grid-template-columns:auto auto;grid-template-areas:"f f" "p n";justify-content:center;align-content:center;gap:20px 28px}
+  .gr-lb-frame{grid-area:f}
+  .gr-lb-nav{position:static;transform:none}
+  .gr-lb-nav:active{transform:scale(.92)}
+  .gr-lb-prev{grid-area:p;justify-self:end}
+  .gr-lb-next{grid-area:n;justify-self:start}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FOOTER GR — barra propia, ya no la réplica de toyota.com.co
+   Negro, como el header, para cerrar la página con la misma
+   marca. La franja va separada del bloque de cierre —que también
+   es negro— por la línea de 1px de arriba, no por el color.
+   Los enlaces mantienen Toyota Type: son textos largos y legales,
+   y DecimaMonoPro a ese tamaño se lee peor. Las versalitas del
+   sistema GR quedan para los títulos de columna.
+══════════════════════════════════════════════════════════════ */
+.t-footer{
+  background:#0b0b0d;color:#fff;
+  border-top:1px solid rgba(255,255,255,.14);
+  padding-block:clamp(40px,4vw,72px) 0;
+  font-size:14px;
+}
+.t-footer a{text-decoration:none;color:inherit}
+/* Todo el footer vive entre la columna 2 y la 11 (.wrap.is-10col), igual que
+   Los inicios, GR Garage, la galería y Boutique. */
+
+/* Fila 1 · el logo a la izquierda y el grupo de listas pegado a la derecha,
+   para que la última columna termine justo donde terminan el divider y el
+   icono de Instagram. Las listas van a ancho de contenido, no en reja de
+   anchos iguales: así la última cierra sobre el borde en vez de dejar un
+   sobrante a su derecha. De paso los enlaces largos dejan de partirse. */
+.t-footer-top{
+  display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;
+  gap:clamp(24px,3vw,56px);
+}
+.t-footer-cols{
+  display:flex;flex-wrap:wrap;align-items:flex-start;
+  gap:clamp(24px,3vw,56px) clamp(26px,3.4vw,68px);
+  /* margin-left:auto y no solo el space-between del padre: cuando el grupo no
+     cabe junto al logo y baja a una segunda línea, el space-between lo dejaría
+     pegado a la izquierda y la última columna perdería el borde. */
+  margin-left:auto;
+}
+/* Ancho explícito: como ítem de flex, el <a> se dimensiona por el max-content
+   del SVG (964 px de viewBox) y quedaba más ancho que el logo que contiene. */
+.t-footer-brand{display:block;flex-shrink:0;width:min(100%,220px)}
+.t-footer-logo{width:100%;height:auto}
+.t-footer-title{
+  display:block;margin-bottom:14px;
+  font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-synthesis:none;
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);
+}
+.t-footer-list{display:flex;flex-direction:column;gap:9px}
+.t-footer-list a{color:rgba(255,255,255,.8);transition:color .2s}
+.t-footer-list a:hover{color:#fff}
+
+/* Instagram va en el mismo botón circular que el WhatsApp del header: suelto
+   en la esquina se leía como un glifo perdido, y así ata las dos barras. */
+.t-footer-social{display:flex;align-items:center;gap:clamp(14px,1.4vw,22px)}
+.t-footer-social a{
+  display:flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.08);
+  transition:background .22s,transform .22s var(--ease);
+}
+.t-footer-social a:hover{background:var(--gr-red-ui);transform:translateY(-2px)}
+/* Los PNG de redes vienen en negro: el filtro los aplana a blanco. */
+.t-footer-social img{
+  width:17px;height:17px;object-fit:contain;
+  filter:brightness(0) invert(1);opacity:.78;transition:opacity .2s;
+}
+.t-footer-social a:hover img{opacity:1}
+
+/* Fila 2 · legales a la izquierda, Instagram a la derecha.
+   ⚠️ La línea va acá y no en el .wrap: el wrap lleva su padding-inline, así
+   que un borde puesto sobre él se dibuja sobre su caja exterior y sobresale
+   40 px por cada lado de las columnas. */
+.t-footer-mid{
+  /* nowrap a propósito: con wrap, el flex corta línea ANTES de encoger, así
+     que en cuanto los siete legales no caben de una, Instagram se iba a una
+     línea suelta. Sin wrap, los enlaces se encogen y parten dentro de su caja
+     y el icono se queda arriba a la derecha. */
+  display:flex;flex-wrap:nowrap;justify-content:space-between;align-items:flex-start;
+  gap:14px clamp(24px,3vw,60px);
+  margin-top:clamp(32px,3.2vw,56px);
+  padding-top:clamp(22px,2.2vw,36px);
+  border-top:1px solid rgba(255,255,255,.12);
+  font-size:12px;
+}
+/* Fila 3 · copyright, cerrando el footer. Es lo menos importante, así que baja
+   de tamaño y de contraste: sin esa diferencia las dos filas se leían como un
+   mismo bloque de gris. */
+.t-footer-legal{
+  display:flex;flex-wrap:wrap;row-gap:4px;
+  margin-top:clamp(14px,1.4vw,22px);
+  padding-bottom:clamp(28px,2.8vw,48px);
+  font-size:11.5px;line-height:1.9;color:rgba(255,255,255,.34);
+}
+/* Los siete legales van en UNA fila —los de accesibilidad, privacidad y
+   cookies incluidos— y no en una banda aparte al pie: ahí abajo quedaban
+   solos, pidiendo su propio filete para no verse sueltos. */
+.t-footer-links{
+  display:flex;flex-wrap:wrap;row-gap:4px;
+  /* Que se encoja y parta sus propias líneas en vez de empujar a Instagram
+     a una línea aparte cuando los siete no caben de una. */
+  flex:1 1 auto;min-width:0;
+  font-size:12.5px;line-height:1.9;color:rgba(255,255,255,.68);
+}
+.t-footer-links a{transition:color .2s}
+.t-footer-links a:hover{color:#fff}
+
+/* Separadores en punto medio entre elementos, en vez de dejarlos flotando a
+   base de espacios. Color propio para que el hover del enlace no se los lleve
+   por herencia, y ::after del anterior —no ::before del siguiente— para que
+   al partirse la fila el punto cierre línea en vez de abrirla.
+   Las filas son flex y sin column-gap a propósito: flex se come los nodos de
+   espacio en blanco del HTML, que si no se sumaban al separador y
+   descuadraban las distancias. Los márgenes del punto son el único aire. */
+.t-footer-links a:not(:last-child)::after,
+.t-footer-legal span:not(:last-child)::after{
+  content:'·';
+  margin:0 clamp(9px,.95vw,16px);
+  color:rgba(255,255,255,.26);
+}
+.t-footer-acc-btn{display:none}
+
+/* 1024 y no 900, igual que el header: entre 900 y 1024 el grupo de listas se
+   partía en dos líneas y la última dejaba de cerrar sobre el borde. */
+@media (max-width:1024px){
+  /* Apilado: las cuatro listas como acordeón */
+  .t-footer-top{display:block}
+  .t-footer-brand{margin-bottom:clamp(24px,5vw,36px)}
+  /* Sin puntos separadores: acá las filas se parten en varias líneas y el
+     punto quedaba colgando al final. El aire lo da el column-gap. */
+  .t-footer-links a:not(:last-child)::after,
+  .t-footer-legal span:not(:last-child)::after{content:none}
+  .t-footer-links{column-gap:clamp(14px,4.2vw,24px)}
+  /* Apilado en columna, con Instagram ARRIBA de los legales: colgando debajo
+     de tres líneas de letra chica quedaba perdido. */
+  .t-footer-mid{
+    flex-wrap:wrap;flex-direction:column;align-items:flex-start;
+    gap:clamp(16px,4vw,22px);
+    /* Sin filete propio: la reja de acordeones ya cierra con el borde
+       inferior de su última fila, y los dos juntos se veían pegados. */
+    border-top:0;padding-top:0;
+    margin-top:clamp(20px,5vw,28px);
+  }
+  .t-footer-social{order:-1}
+  /* La divisoria baja acá, entre los legales y el copyright. */
+  .t-footer-legal{
+    flex-direction:column;row-gap:2px;
+    margin-top:clamp(18px,4.5vw,26px);
+    padding-top:clamp(18px,4.5vw,26px);
+    border-top:1px solid rgba(255,255,255,.12);
+  }
+  .t-footer-cols{
+    display:grid;grid-auto-flow:row;gap:0;
+    border-top:1px solid rgba(255,255,255,.12);
+  }
+  .t-footer-col{border-bottom:1px solid rgba(255,255,255,.12)}
+  .t-footer-acc-btn{
+    display:flex;justify-content:space-between;align-items:center;
+    width:100%;padding:18px 0;color:#fff;
+    font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-synthesis:none;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    text-align:left;
+  }
+  .t-footer-acc-icon{
+    font-size:22px;font-weight:300;line-height:1;color:var(--gr-red);
+    transition:transform .25s var(--ease);
+  }
+  .t-footer-acc-btn[aria-expanded="true"] .t-footer-acc-icon{transform:rotate(45deg)}
+  .t-footer-title{display:none}
+  .t-footer-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s var(--ease)}
+  .t-footer-body>div{overflow:hidden}
+  /* ⚠️ Hermano GENERAL (~) y no adyacente (+): entre el botón y el cuerpo
+     está el span del título, que en móvil va oculto pero sigue en el DOM.
+     Con + el selector no casaba y el acordeón no abría. */
+  .t-footer-acc-btn[aria-expanded="true"] ~ .t-footer-body{grid-template-rows:1fr}
+  .t-footer-list{padding-bottom:18px}
+  .t-footer-list a{padding:5px 0}
+  .t-footer-mid{justify-content:flex-start}
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   ▼▼▼  LANDING DE VEHÍCULO — lo nuevo de esta plantilla  ▼▼▼
+   Todo prefijado .gv-. Reutiliza los tokens del Home (--col,
+   --gutter, --pad-x, --sec-y) y sus piezas (.gr-btn, .gr-chip,
+   .gr-vcard, .gr-gal-*).
+══════════════════════════════════════════════════════════════ */
+
+/* La landing sí tiene barra propia debajo del header: la sub-nav de
+   secciones. Su alto entra en el scroll-margin de los anclajes. */
+:root{--subnav-h:50px}
+
+/* Botón oscuro: para superficies grises/blancas, donde el blanco del
+   .gr-btn base no se ve y el ghost blanco tampoco. */
+.gr-btn--dark{background:#0a0a0a;color:#fff}
+.gr-btn--dark:hover{background:#26262b}
+.gr-btn--line{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(10,10,15,.35)}
+.gr-btn--line:hover{background:rgba(10,10,15,.06)}
+
+/* Secciones claras: el mismo respiro blanco de la galería del Home */
+.gv-light{background:#fff;color:var(--ink)}
+.gv-light .gr-title{color:var(--gr-red-ui)}
+.gv-light .gr-lead{color:rgba(10,10,15,.62)}
+.gv-light .gr-lead b{color:var(--ink)}
+.gv-light .gr-eyebrow{color:#8a8a92}
+.gv-light.gr-section{border-top:1px solid var(--line)}
+
+/* Encabezado con acción a la derecha (título + CTA en la misma fila) */
+.gv-head-row{
+  display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
+  gap:clamp(14px,1.6vw,28px) clamp(18px,2.4vw,56px);
+  margin-bottom:clamp(18px,2vw,38px);
+}
+.gv-head-row .gr-head{margin-bottom:0}
+
+/* ══════════════════════════════════════════════════════════════
+   BANNER DEL MODELO — una FOTO completa (auto + escenario)
+
+   La foto NUNCA se recorta porque el banner siempre tiene su misma
+   proporción:
+     desktop (≥1280)   3840 × 1190 (≈3,23:1)  texto ENCIMA de la foto
+     tablet (761–1279) la misma foto, completa arriba, texto debajo
+     móvil  (≤760)     1000 × 667  (3:2)      foto arriba, texto debajo
+   En desktop no hay min-height a propósito: cualquier alto mínimo
+   cambiaría la proporción y el cover empezaría a recortar. Por eso
+   también el texto encima solo arranca en 1280: por debajo el banner
+   queda tan bajo que el texto no entraría sin estirarlo.
+
+   Composición de la foto de desktop: el auto CENTRADO (ver ?guias en
+   la URL y assets/banners/plantilla-banner-*.svg):
+     · zona segura del vehículo   el tercio central, entre miga y pie
+     · nombre       abajo a la izquierda (columnas 1–3)
+     · precio       abajo a la derecha (columnas 10–12)
+     · legales y sellos   franja inferior a todo el ancho
+══════════════════════════════════════════════════════════════ */
+/* La proporción va en la sección (a sangre, igual que la foto) y no en el
+   .wrap, que es más angosto: si no coinciden, el cover recorta. */
+.gv-banner{
+  /* Aire bajo la foto y bajo el pie: sin esto el auto y los sellos quedaban
+     pegados al borde inferior. */
+  --lift:clamp(28px,7vh,90px);
+  position:relative;isolation:isolate;background:#000;
+  /* Alto de pantalla (menos header y sub-nav), como el hero del Home. Nunca
+     más bajo que la foto a todo el ancho (piso del clamp) ni más alto que el
+     62 % del ancho (techo: en monitores verticales sería una torre). */
+  height:clamp(calc(100vw * 1190 / 3840),calc(100vh - var(--header-h)),calc(100vw * .62));
+  height:clamp(calc(100vw * 1190 / 3840),calc(100dvh - var(--header-h)),calc(100vw * .62));
+  display:grid;grid-template-columns:minmax(0,1fr);
+}
+.gv-banner-media{position:absolute;inset:0;z-index:-1;overflow:hidden;background:#0b0306}
+/* La foto va COMPLETA y a todo el ancho, apoyada abajo: así el auto y las
+   zonas de nombre, precio y pie quedan donde la plantilla dice. */
+.gv-banner-photo{
+  position:absolute;bottom:var(--lift);left:50%;
+  /* Crece con el alto disponible hasta el 125 % del ancho: recorta como
+     mucho un 10 % por lado (fondo, según la plantilla) y el auto gana tamaño
+     en pantallas altas. Nunca menos que el ancho completo. */
+  width:min(125vw,max(100vw,calc((100dvh - var(--header-h) - var(--lift)) * 3840 / 1190)));
+  transform:translateX(-50%);
+  aspect-ratio:3840/1190;
+  /* Funde el borde de arriba de la foto con la extensión */
+  /* Funde también el borde de abajo con el negro del pie */
+  -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 22%,#000 86%,transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 0%,#000 22%,#000 86%,transparent 100%);
+}
+.gv-banner-photo picture{display:contents}
+.gv-banner-img{width:100%;height:100%;object-fit:cover;display:block}
+/* Lo que sobra arriba lo llena la MISMA foto, pero SOLO su franja de arriba
+   (el 1/6 superior, que en estas fotos es fondo puro, por encima del techo
+   del auto): se estira a lo alto y se desenfoca. Usar la foto entera dejaba
+   el auto desenfocado como una mancha. Misma URL: no descarga nada más. */
+.gv-banner-ext{
+  position:absolute;left:-5%;top:-5%;width:110%;height:600%;
+  object-fit:fill;
+  filter:blur(28px) brightness(.8);
+}
+/* Velo: oscurece los dos lados de abajo (nombre y precio) y el pie */
+.gv-banner-scrim{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 70%,rgba(0,0,0,.55) 100%),
+    linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 20%,rgba(0,0,0,0) 55%,rgba(0,0,0,.8) 100%);
+}
+
+.gv-banner-in{
+  position:relative;
+  display:grid;
+  /* 3 · 6 · 3 columnas: nombre | auto | precio. Con 4 · 4 · 4 el nombre
+     más largo llegaba a la rueda trasera de un auto centrado. */
+  grid-template-columns:minmax(0,3fr) minmax(0,6fr) minmax(0,3fr);
+  grid-template-rows:auto minmax(0,1fr) auto;
+  column-gap:var(--gutter);
+  padding-top:clamp(16px,1.6vw,30px);
+  padding-bottom:var(--lift);
+}
+.gv-banner-crumbs{grid-column:1 / -1;grid-row:1}
+.gv-banner-text{grid-column:1;grid-row:2;align-self:end;padding-bottom:clamp(14px,1.3vw,26px)}
+.gv-buy{grid-column:3;grid-row:2;align-self:end;text-align:right;padding-bottom:clamp(14px,1.3vw,26px)}
+.gv-banner-foot{
+  grid-column:1 / -1;grid-row:3;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:clamp(16px,2vw,48px);
+  padding-block:clamp(10px,.9vw,18px) clamp(12px,1.1vw,22px);
+  border-top:1px solid rgba(255,255,255,.2);
+}
+
+/* Miga de pan */
+.gv-crumbs{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  list-style:none;
+  font-size:clamp(10.5px,.74vw,12.5px);letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(255,255,255,.7);
+}
+.gv-crumbs a{color:rgba(255,255,255,.7);transition:color .2s}
+.gv-crumbs a:hover{color:#fff}
+.gv-crumbs li+li::before{
+  content:'';display:inline-block;width:5px;height:5px;margin-right:10px;
+  border-top:1.5px solid var(--gr-red);border-right:1.5px solid var(--gr-red);
+  transform:translateY(-1px) rotate(45deg);
+}
+.gv-crumbs [aria-current]{color:#fff}
+
+.gv-hero-tags{display:flex;align-items:center;gap:14px;margin-bottom:clamp(8px,.8vw,16px)}
+.gv-hero-tags .gr-eyebrow{margin:0;color:rgba(255,255,255,.8)}
+/* La etiqueta Novedad es la misma del mega-menú (.t-mega-tag) */
+.gv-hero-tags .t-mega-tag{font-size:clamp(9.5px,.7vw,11px)}
+.gv-name{
+  /* Medido contra el nombre más largo de la gama, "Land Cruiser 300 GR-S HEV"
+     (25 caracteres): entra en tres líneas como máximo en las columnas 1–3. */
+  font-size:clamp(26px,2.4vw,48px);
+  font-weight:400;line-height:1.02;letter-spacing:.01em;
+  text-transform:uppercase;color:#fff;
+  text-shadow:0 2px 24px rgba(0,0,0,.5);
+}
+.gv-name em{font-style:normal;color:var(--gr-red)}
+.gv-price-label{
+  display:block;font-size:clamp(10px,.72vw,12.5px);
+  letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.75);
+}
+.gv-price{
+  display:block;margin-top:6px;
+  font-size:clamp(22px,2vw,40px);line-height:1;letter-spacing:.02em;color:#fff;
+  font-variant-numeric:tabular-nums;
+}
+/* Precio del banner: el JS le ajusta el tamaño para que termine justo donde
+   termina el legal de abajo ("…referencia."). Este es el tamaño de respaldo. */
+.gv-buy .gv-price{font-size:clamp(30px,3vw,58px);white-space:nowrap}
+.gv-buy .gv-buy-legal{display:inline-block}
+.gv-buy-legal{
+  margin-top:8px;
+  font-family:'ToyotaType',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;
+  font-size:clamp(10.5px,.7vw,12px);line-height:1.5;color:rgba(255,255,255,.75);
+}
+/* El pie ahora solo lleva los sellos, a la derecha */
+.gv-banner-foot{justify-content:flex-end}
+/* Desktop (≥1280): nombre y precio juntos abajo a la izquierda, sellos en el
+   otro extremo sobre la misma línea. El auto queda libre en el centro. */
+@media (min-width:1280px){
+  .gv-banner-in{grid-template-rows:auto minmax(0,1fr) auto auto}
+  .gv-banner-text{grid-column:1 / 3;grid-row:2;padding-bottom:clamp(10px,1vw,18px)}
+  .gv-buy{grid-column:1 / 3;grid-row:3;align-self:start;text-align:left;padding-bottom:0}
+  .gv-banner-foot{
+    grid-column:3;grid-row:2 / 4;align-self:end;
+    border-top:0;padding-block:0;justify-content:flex-end;
+  }
+}
+.gv-banner-legal{
+  max-width:78ch;
+  font-family:'ToyotaType',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;
+  font-size:clamp(10.5px,.7vw,12px);line-height:1.55;color:rgba(255,255,255,.75);
+}
+.gv-seals{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:clamp(10px,1vw,18px);list-style:none;flex-shrink:0}
+/* Sellos: del SVG se ve solo el ícono (la leyenda dibujada queda fuera del
+   recorte, por debajo del 72 % del alto) y se aplana a blanco: vienen en negro,
+   pensados para fondo claro. La leyenda va como texto. */
+.gv-seals{gap:clamp(10px,1vw,20px);align-items:flex-start}
+.gv-seal{display:flex;flex-direction:column;align-items:center;gap:6px;width:clamp(66px,5.2vw,96px);text-align:center}
+.gv-seal-ico{display:block;height:clamp(40px,3.2vw,58px);overflow:hidden}
+.gv-seal-ico img{display:block;height:calc(100% / .72);width:auto;filter:brightness(0) invert(1)}
+.gv-seal-txt{
+  font-family:'ToyotaType',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;
+  font-size:clamp(9px,.62vw,11px);line-height:1.25;text-transform:uppercase;letter-spacing:.02em;
+  color:rgba(255,255,255,.82);
+}
+/* Mientras no lleguen los sellos: huecos marcados del mismo alto */
+.gv-seal-slot{
+  display:flex;align-items:center;justify-content:center;
+  width:clamp(36px,2.8vw,54px);height:clamp(36px,2.8vw,54px);
+  border:1px dashed rgba(255,255,255,.4);border-radius:8px;
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.55);
+}
+
+/* Tablet y móvil: la foto completa arriba y el texto debajo, sobre negro.
+   Así el texto nunca tapa el auto, sea cual sea la foto. */
+@media (max-width:1279px){
+  .gv-banner{height:auto;display:block;--lift:0px}
+  .gv-banner-media{position:relative;inset:auto;z-index:0}
+  .gv-banner-ext{display:none}
+  .gv-banner-photo{position:relative;left:auto;width:100%;transform:none;-webkit-mask-image:none;mask-image:none}
+  .gv-banner-scrim{background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 80%,rgba(0,0,0,.35) 100%)}
+  .gv-banner-in{
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-rows:auto auto auto;
+    padding-top:clamp(18px,3vw,28px);
+  }
+  .gv-banner-text{grid-column:1;grid-row:2;padding-block:16px 18px}
+  .gv-buy{grid-column:2;grid-row:2;padding-block:16px 18px}
+  .gv-banner-foot{grid-row:3}
+  .gv-name{font-size:clamp(28px,3.4vw,40px)}
+}
+/* Móvil: banner vertical a pantalla completa, como en desktop. La foto
+   (completa, 3:2) arriba y toda la información junta abajo: nombre,
+   precio, sellos y legales. Lo que sobra alrededor de la foto lo llena la misma extensión
+   desenfocada de desktop, fundida con la foto arriba y abajo. */
+@media (max-width:760px){
+  .gv-banner{
+    display:grid;--lift:0px;
+    height:calc(100vh - var(--header-h));
+    height:calc(100svh - var(--header-h));
+    min-height:600px;max-height:920px;
+  }
+  .gv-banner-media{position:absolute;inset:0;z-index:-1}
+  .gv-banner-ext{display:block}
+  .gv-banner-photo{
+    position:absolute;left:0;right:0;top:36%;width:100%;
+    transform:translateY(-50%);aspect-ratio:3/2;
+    -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 16%,#000 84%,transparent 100%);
+    mask-image:linear-gradient(180deg,transparent 0%,#000 16%,#000 84%,transparent 100%);
+  }
+  .gv-banner-scrim{background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 18%,rgba(0,0,0,0) 48%,rgba(0,0,0,.85) 66%,#000 100%)}
+  .gv-banner-in{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:minmax(0,1fr) auto auto auto;
+    padding-top:28px;padding-bottom:18px;
+  }
+  .gv-banner-text{grid-row:2;align-self:end;padding:0 0 14px}
+  .gv-buy{grid-column:1;grid-row:3;text-align:left;padding:0 0 14px}
+  .gv-banner-foot{grid-row:4;flex-direction:column-reverse;align-items:stretch;gap:14px}
+  /* Los cinco sellos en una sola fila */
+  .gv-seals{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+  .gv-seal{width:auto}
+  .gv-name{font-size:clamp(30px,9vw,42px)}
+}
+
+/* ── Guías de zonas (?guias en la URL) ── */
+.gv-guides .gv-banner-in::before{
+  content:'Área de respeto';position:absolute;inset:0 var(--pad-x);z-index:5;pointer-events:none;
+  outline:1px dashed #ffd400;font:10px/1 ui-monospace,monospace;color:#ffd400;padding:4px;
+}
+.gv-guides .gv-banner-text,
+.gv-guides .gv-buy,
+.gv-guides .gv-banner-foot{position:relative;outline:2px dashed;outline-offset:-2px}
+.gv-guides .gv-banner-text,.gv-guides .gv-buy{outline-color:#7CFF4F}
+.gv-guides .gv-banner-foot{outline-color:#ff4fd8}
+.gv-guides .gv-banner-text::before,
+.gv-guides .gv-buy::before,
+.gv-guides .gv-banner-foot::before,
+.gv-guides .gv-banner-photo::after{
+  position:absolute;z-index:6;padding:3px 6px;font:10px/1 ui-monospace,monospace;color:#000;
+}
+.gv-guides .gv-banner-text::before{content:'Nombre';top:0;left:0;background:#7CFF4F}
+.gv-guides .gv-buy::before{content:'Precio';top:0;right:0;background:#7CFF4F}
+.gv-guides .gv-banner-foot::before{content:'Legales y sellos';top:0;right:0;background:#ff4fd8}
+/* Zona segura del vehículo: el tercio central de la foto */
+.gv-guides .gv-banner-photo::after{
+  content:'Zona segura · vehículo';top:9%;bottom:16%;left:30%;right:30%;
+  outline:2px dashed #00e5ff;background:none;color:#00e5ff;
+}
+@media (max-width:1279px){
+  .gv-guides .gv-banner-photo::after{top:6%;bottom:6%;left:6%;right:6%}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SUB-NAV DE SECCIONES
+   Sticky debajo del header. Mismo lenguaje que la nav del header:
+   DecimaMonoPro en versalitas y subrayado en el paralelogramo GR.
+   El enlace activo lo marca el scrollspy del JS.
+══════════════════════════════════════════════════════════════ */
+.gv-subnav{
+  /* Fija y escondida al cargar: aparece deslizando desde debajo del header
+     cuando el banner ya pasó (clase .is-on, la pone el JS). Así el primer
+     pantallazo es solo el banner. Por estar fija no ocupa lugar en el flujo. */
+  position:fixed;left:0;right:0;top:var(--header-h);z-index:900;
+  height:var(--subnav-h);
+  transform:translateY(-100%);opacity:0;visibility:hidden;
+  transition:transform .32s var(--ease),opacity .32s var(--ease),visibility .32s;
+  background:rgba(0,0,0,.86);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.gv-subnav.is-on{transform:none;opacity:1;visibility:visible}
+.gv-subnav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.gv-subnav-model{
+  flex-shrink:0;font-size:clamp(12px,.9vw,15px);letter-spacing:.14em;text-transform:uppercase;color:#fff;
+}
+.gv-subnav-model em{font-style:normal;color:var(--gr-red)}
+.gv-subnav-links{
+  display:flex;align-items:center;gap:clamp(16px,1.9vw,36px);height:100%;
+  list-style:none;
+  overflow-x:auto;scrollbar-width:none;
+}
+.gv-subnav-links::-webkit-scrollbar{display:none}
+.gv-subnav-links a{
+  position:relative;display:flex;align-items:center;height:100%;
+  font-size:clamp(10.5px,.78vw,12.5px);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;
+  color:rgba(255,255,255,.62);transition:color .2s;
+}
+.gv-subnav-links a:hover,.gv-subnav-links a.is-active{color:#fff}
+.gv-subnav-links a::after{
+  content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--gr-red);
+  transform:skewX(-14deg) scaleX(0);transform-origin:left center;transition:transform .28s var(--ease);
+}
+.gv-subnav-links a:hover::after,.gv-subnav-links a.is-active::after{transform:skewX(-14deg) scaleX(1)}
+.gv-subnav-cta.gr-btn{flex-shrink:0;padding:9px 20px;font-size:11px}
+@media (max-width:1024px){
+  .gv-subnav-model,.gv-subnav-cta{display:none}
+  /* Sangra a los bordes para que el scroll horizontal no se corte en el margen */
+  .gv-subnav-inner{padding-inline:0}
+  .gv-subnav-links{padding-inline:var(--pad-x);scroll-padding-inline:var(--pad-x);width:100%}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   COLORES — escenario oscuro con el auto, panel a la derecha
+   Reemplaza al visor 360 de gazooracing.com.co. Cada color trae su
+   foto en MODEL.colors; cuando lleguen los renders 360 por color
+   basta con cambiar la ruta.
+══════════════════════════════════════════════════════════════ */
+.gv-colors{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(ellipse 60% 55% at 36% 78%,rgba(255,0,0,.16) 0%,transparent 70%),
+    #050506;
+}
+.gv-colors-grid{
+  display:grid;grid-template-columns:minmax(0,1.75fr) minmax(280px,1fr);
+  align-items:center;gap:clamp(24px,3vw,72px);
+}
+.gv-stage{
+  position:relative;aspect-ratio:2000/1000;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+/* Sin línea ni sombra de piso: las fotos del auto ya traen su sombra */
+.gv-stage-car{
+  /* Solo el auto sube: ocupa el 82 % de arriba del escenario (piso en el
+     18 %) y se agranda; la pista, el legal y el pie del visor no se mueven. */
+  position:absolute;left:0;right:0;top:0;z-index:1;
+  width:100%;height:82%;object-fit:contain;object-position:center bottom;
+  /* --fit iguala el tamaño entre colores (los renders no vienen igual de
+     encuadrados); se escala desde el centro del auto, que es el mismo en
+     todos los renders. */
+  transform:translateX(-10px) scale(calc(1.14 * var(--fit,1)));transform-origin:50% 57%;
+}
+.gv-stage-car.is-swapping{opacity:0}
+/* Pie del visor: selector de vista y legal */
+.gv-viewer-foot{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:clamp(12px,1.2vw,22px)}
+.gv-viewer-foot .gv-fine{margin:0}
+@media (max-width:760px){.gv-viewer-foot{flex-direction:column;align-items:center;text-align:center;gap:8px}}
+.gv-drag-hint{
+  display:inline-flex;align-items:center;gap:10px;
+  font-size:clamp(10.5px,.78vw,12.5px);letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.7);
+}
+.gv-drag-hint[hidden]{display:none}
+.gv-drag-hint svg{width:20px;height:20px;color:var(--gr-red)}
+/* Visor girable: cursor de arrastre y sin selección/arrastre nativo de la imagen */
+.gv-stage.is-spin{cursor:grab;touch-action:pan-y;user-select:none}
+.gv-stage.is-spin:active{cursor:grabbing}
+.gv-stage.is-spin img{-webkit-user-drag:none;pointer-events:none}
+.gv-stage.is-spin:focus-visible{outline:2px solid var(--gr-red);outline-offset:6px;border-radius:8px}
+
+.gv-panel .gr-title{font-size:clamp(22px,2.2vw,38px)}
+.gv-colors-title{font-weight:400}
+.gv-color-name{
+  margin-top:clamp(18px,1.8vw,34px);
+  font-size:clamp(18px,1.6vw,28px);color:#fff;
+}
+.gv-color-meta{
+  display:block;margin-top:6px;
+  font-size:clamp(10.5px,.78vw,13px);letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.5);
+}
+/* Muestras en el paralelogramo GR */
+.gv-swatches{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(14px,1.3vw,24px);list-style:none}
+.gv-swatch{
+  width:clamp(46px,3.4vw,62px);height:clamp(30px,2.2vw,40px);
+  border-radius:7px;transform:skewX(-14deg);
+  /* La muestra viene redonda: agrandada, su textura llena el paralelogramo */
+  background:var(--sw) center/170% no-repeat #222;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);
+  transition:transform .2s var(--ease),box-shadow .2s;
+}
+.gv-swatch:hover{transform:skewX(-14deg) translateY(-2px)}
+.gv-swatch[aria-pressed="true"]{box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 0 0 2px #000,0 0 0 4px var(--gr-red)}
+.gv-panel-price{
+  margin-top:clamp(22px,2.2vw,40px);padding-top:clamp(16px,1.5vw,26px);
+  border-top:1px solid rgba(255,255,255,.14);
+}
+.gv-panel-price .gv-price{font-size:clamp(24px,2.1vw,38px)}
+/* Cotizar y Ver ficha técnica lado a lado, mitad y mitad del panel */
+.gv-panel-ctas{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:clamp(16px,1.5vw,26px)}
+.gv-panel-ctas .gr-btn{justify-content:center;padding-inline:clamp(10px,1vw,18px);white-space:nowrap;letter-spacing:.1em}
+@media (max-width:760px){.gv-panel-ctas{gap:var(--gutter)}}
+.gv-fine{margin-top:clamp(12px,1.1vw,18px);font-size:clamp(10.5px,.74vw,12.5px);line-height:1.6;color:rgba(255,255,255,.45)}
+/* Desktop: el visor toma el alto del panel; el auto queda centrado y el pie
+   (arrastra + legal) baja hasta la línea del último legal del panel. */
+@media (min-width:1025px){
+  .gv-colors-grid{align-items:stretch}
+  .gv-viewer{display:flex;flex-direction:column}
+  .gv-viewer .gv-stage{margin-block:auto}
+  .gv-viewer-foot{margin-top:clamp(12px,1.2vw,22px)}
+  .gv-panel > :last-child{margin-bottom:0}
+}
+/* Apilado (tablet y móvil): primero elegir el color, después ver el auto y
+   al final el precio. El panel se "disuelve" (display:contents) para que sus
+   piezas y el visor se ordenen en una sola columna. */
+@media (max-width:1024px){
+  .gv-colors-grid{grid-template-columns:minmax(0,1fr);row-gap:0}
+  .gv-panel{display:contents}
+  .gv-panel > *{order:1}
+  .gv-viewer{order:2;margin-top:clamp(20px,5vw,32px)}
+  .gv-panel > .gv-panel-price,
+  .gv-panel > .gv-panel-ctas,
+  .gv-panel > [data-model="priceLegal"]{order:3}
+}
+@media (max-width:760px){
+  /* El auto ocupa todo el escenario: sin el piso vacío de desktop */
+  .gv-stage{aspect-ratio:2000/900}
+  .gv-stage-car{height:100%}
+  .gv-viewer-foot{margin-top:6px}
+}
+
+/* Presentación del modelo: sección propia, centrada y con aire, antes del
+   configurador de color. El filete y el galón la separan de lo que sigue. */
+.gv-intro{
+  background:#000;
+  padding:clamp(56px,6vw,120px) 0;
+  text-align:center;
+}
+.gv-intro-in{max-width:calc(8 * var(--col) + 7 * var(--gutter));margin-inline:auto}
+/* Franjas GR (assets/elements/gr-stripes.png) sobre el título, en sus
+   colores originales: el degradé de rojos es lo que las hace reconocibles. */
+.gv-intro-in::before{
+  content:'';display:block;width:clamp(40px,3.2vw,56px);aspect-ratio:99/85;margin:0 auto clamp(18px,1.8vw,30px);
+  background:url("assets/elements/gr-stripes.png") center/contain no-repeat;
+}
+/* Reparte las líneas del título: nada de una palabra sola al final */
+.gv-intro .gr-title{text-wrap:balance}
+.gv-intro .gr-lead{max-width:none;margin-inline:auto;font-size:clamp(15px,1.25vw,22px);line-height:1.65;color:rgba(255,255,255,.8)}
+.gv-year{
+  /* Etiqueta "Modelo 2027": paralelogramo GR (skew en la caja y
+     contra-skew en el texto, como los botones y "Novedad") */
+  display:inline-block;margin-top:10px;padding:4px 11px;font-size:11px;text-transform:uppercase;border-radius:4px;
+  background:rgba(255,255,255,.12);color:#fff;font-weight:400;letter-spacing:.12em;
+  transform:skewX(-14deg);
+}
+.gv-year > span{display:inline-block;transform:skewX(14deg)}
+
+/* ══════════════════════════════════════════════════════════════
+   GALERÍA — pestañas Exterior / Interior sobre el bento del Home
+══════════════════════════════════════════════════════════════ */
+.gv-tabs{
+  display:inline-flex;gap:4px;padding:4px;
+  background:#efeff1;border-radius:10px;transform:skewX(-14deg);
+}
+.gv-tab{
+  padding:clamp(9px,.75vw,13px) clamp(18px,1.6vw,30px);border-radius:7px;
+  font-size:clamp(10.5px,.8vw,13px);letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(10,10,15,.6);transition:background .2s,color .2s;
+}
+.gv-tab>span{display:inline-block;transform:skewX(14deg)}
+.gv-tab:hover{color:var(--ink)}
+.gv-tab[aria-selected="true"]{background:var(--ink);color:#fff}
+.gr-gal-grid[hidden]{display:none}
+/* Pieza pendiente de foto oficial: se ve como hueco intencional, no roto */
+.gr-gal-item.is-pending{
+  cursor:default;display:flex;align-items:center;justify-content:center;
+  background:
+    repeating-linear-gradient(-56deg,transparent 0 18px,rgba(10,10,15,.035) 18px 36px),
+    #f1f1f3;
+  box-shadow:inset 0 0 0 1px var(--line);
+}
+.gr-gal-item.is-pending::after{content:none}
+.gr-gal-item.is-pending .gr-gal-cap{
+  position:static;color:rgba(10,10,15,.45);text-align:center;padding:0 16px;
+}
+/* Recortes con transparencia: van sobre gris claro y contenidos, no a sangre */
+.gr-gal-item.is-cutout{background:#e9e9ec}
+.gr-gal-item.is-cutout img{object-fit:contain;padding:3%}
+.gr-gal-item.is-cutout::after{background:linear-gradient(to bottom,transparent 60%,rgba(0,0,0,.4))}
+/* Filas más bajas que en el Home (9.7vw): así la sección entera —título,
+   bento y pie— entra en un viewport de 1440×900 con aire, bajo el header y
+   la sub-nav. En ≤900 manda la regla móvil del Home. */
+@media (min-width:901px){
+  #galeria .gr-gal-grid{grid-auto-rows:clamp(84px,7.2vw,132px)}
+  /* Bento propio de la landing: 1 grande · 2 chicas arriba a la derecha ·
+     1 apaisada abajo a la izquierda · 2 altas (filas 2 y 3) a la derecha. */
+  #galeria .gr-gal-item:nth-child(4){grid-column:1/span 2;grid-row:3}
+  #galeria .gr-gal-item:nth-child(5){grid-column:3;grid-row:2/span 2}
+  #galeria .gr-gal-item:nth-child(6){grid-column:4;grid-row:2/span 2}
+}
+/* Legal sobre cada imagen (galería, diferenciales y visor) */
+.gv-ref{
+  position:absolute;right:10px;bottom:8px;z-index:3;pointer-events:none;
+  font-family:'ToyotaType',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;
+  font-size:10px;line-height:1;letter-spacing:.02em;color:rgba(255,255,255,.88);
+  text-shadow:0 1px 3px rgba(0,0,0,.65);
+}
+.gv-reason-photo{position:relative}
+.gv-ref--lb{right:14px;bottom:12px;font-size:11px}
+
+/* Fotos 7 en adelante: fuera de la reja, pero dentro del visor */
+.gv-more-m{display:none}
+/* Móvil: se oculta la 2ª fila de chicas (fotos 4 y 5) para que el bloque
+   entero entre en pantalla; siguen en el visor y el contador las suma. */
+@media (max-width:760px){
+  #galeria .gr-gal-item:nth-child(4),
+  #galeria .gr-gal-item:nth-child(5){display:none}
+  .gv-more-d{display:none}
+  .gv-more-m{display:inline}
+}
+.gr-gal-item.is-extra{display:none}
+.gv-gal-more{
+  position:absolute;inset:0;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.45);color:#fff;
+  font-size:clamp(22px,2.2vw,40px);letter-spacing:.06em;
+  transition:background .25s;
+}
+.gr-gal-item:hover .gv-gal-more{background:rgba(0,0,0,.6)}
+.gv-gal-foot{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;
+  margin-top:clamp(14px,1.4vw,30px);
+}
+.gv-gal-foot .gr-disclaimer{margin:0;text-align:left}
+@media (max-width:760px){
+  .gv-gal-foot{flex-direction:column;align-items:stretch;gap:14px}
+  .gv-gal-foot .gr-btn{justify-content:center}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DIFERENCIALES — slider
+   La misma composición y mecánica del carrusel de modelos del Home
+   (.gr-models + .gr-vgrid + grCarousel): encabezado y flechas a la
+   izquierda, piezas a la derecha. Dos piezas por vista en desktop,
+   una en móvil. Piezas sin íconos ni números de fondo: solo el
+   número chico, el título y el texto.
+══════════════════════════════════════════════════════════════ */
+/* Columna de encabezado más ancha que en el Home: el título es una frase */
+#diferenciales .gr-models{grid-template-columns:minmax(260px,30%) 1fr}
+#diferenciales .gr-title{font-size:clamp(22px,2.2vw,38px)}
+#diferenciales .gr-models-head .gr-lead{max-width:36ch}
+.gv-reasons{
+  list-style:none;
+  grid-auto-columns:calc((100% - clamp(14px,1.4vw,30px)) / 2);
+}
+.gv-reason{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:clamp(12px,1vw,20px);
+}
+.gv-reason-photo{aspect-ratio:16/10;overflow:hidden;background:#0d0d10}
+.gv-reason-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.gv-reason-body{padding:clamp(18px,1.6vw,30px)}
+.gv-reason-logo{display:block;height:clamp(28px,2.2vw,34px);width:auto;margin-top:12px}
+.gv-reason-list{list-style:none;margin-top:clamp(10px,.9vw,16px);display:grid;gap:8px}
+.gv-reason-list li{
+  position:relative;padding-left:16px;
+  font-size:clamp(13px,.95vw,16px);line-height:1.5;color:rgba(255,255,255,.66);
+}
+.gv-reason-list li::before{content:'';position:absolute;left:0;top:.6em;width:7px;height:2px;background:var(--gr-red);transform:skewX(-14deg)}
+.gv-reason-num{
+  font-size:clamp(11px,.8vw,13px);letter-spacing:.18em;color:var(--gr-red);
+  font-variant-numeric:tabular-nums;
+}
+.gv-reason-num span{color:rgba(255,255,255,.35)}
+.gv-reason-title{
+  margin-top:10px;
+  font-size:clamp(17px,1.5vw,26px);font-weight:400;line-height:1.15;
+  letter-spacing:.04em;text-transform:uppercase;color:#fff;
+}
+.gv-reason-text{
+  margin-top:clamp(10px,.9vw,16px);
+  font-size:clamp(13px,.95vw,16px);line-height:1.55;color:rgba(255,255,255,.66);
+  max-width:46ch;
+}
+@media (max-width:1360px){
+  #diferenciales .gr-models-head .gr-lead{max-width:60ch}
+}
+@media (max-width:760px){
+  .gv-reasons{grid-auto-columns:var(--card-4col)}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   VERSIONES — "Encuentra tu versión"
+   La card de vehículo del Home (marco blanco, cuerpo gris) puesta
+   en horizontal. Si el modelo tiene varias versiones se apilan.
+══════════════════════════════════════════════════════════════ */
+.gv-versions{display:grid;gap:clamp(14px,1.4vw,28px);list-style:none}
+/* Con varias versiones: carrusel de una card por vista, con flechas */
+.gv-versions.is-carousel{
+  grid-auto-flow:column;grid-auto-columns:100%;
+  overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;
+  padding-bottom:clamp(20px,2vw,40px);margin-bottom:calc(clamp(20px,2vw,40px) * -1);
+}
+.gv-versions.is-carousel::-webkit-scrollbar{display:none}
+.gv-versions.is-carousel > li{scroll-snap-align:start}
+.gv-versions-nav{margin-top:clamp(18px,2vw,32px)}
+/* Desktop: las flechas suben a la fila del título, a la derecha; en móvil
+   quedan debajo de la card (orden del DOM). */
+@media (min-width:761px){
+  .gv-versions-wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:24px}
+  .gv-versions-wrap > .gr-head{grid-area:1 / 1}
+  .gv-versions-wrap > .gv-versions-nav{grid-area:1 / 2;align-self:end;margin:0 0 clamp(16px,1.9vw,34px)}
+  .gv-versions-wrap > .gv-versions{grid-area:2 / 1 / 3 / 3}
+}
+.gv-versions-nav[hidden]{display:none}
+.gv-version{
+  container-type:inline-size;
+  background:#fff;border-radius:clamp(16px,1.4vw,26px);
+  padding:clamp(6px,.6vw,11px);
+  box-shadow:0 clamp(12px,1.3vw,30px) clamp(30px,3.2vw,74px) -18px rgba(0,0,0,.75);
+}
+.gv-version-body{
+  display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);
+  background:#d9d9db;border-radius:clamp(12px,1vw,20px);overflow:hidden;
+}
+.gv-version-photo{
+  position:relative;
+  background:radial-gradient(ellipse 70% 60% at 50% 70%,#f4f4f5 0%,#d9d9db 75%);
+  display:flex;align-items:center;justify-content:center;
+  padding:clamp(12px,2cqi,40px);
+}
+.gv-version-photo{overflow:hidden}
+.gv-version-photo img{width:100%;height:auto;object-fit:contain;transform:scale(1.25)}
+.gv-version-info{
+  display:flex;flex-direction:column;gap:clamp(10px,1.3cqi,20px);
+  padding:clamp(18px,3cqi,48px);
+  color:var(--ink);
+}
+.gv-version-info .gr-chips{--chip-f:clamp(10px,1.15cqi,13px);min-height:0}
+.gv-version-name{font-size:clamp(20px,2.6cqi,38px);font-weight:400;line-height:1.05;letter-spacing:-.01em}
+.gv-version-name span{display:block;margin-top:6px;font-size:.5em;letter-spacing:.14em;text-transform:uppercase;color:#6b6b72}
+.gv-version-desc{font-size:clamp(12.5px,1.25cqi,16px);line-height:1.5;color:#4d4d54}
+/* Datos, precio y botones comparten UNA reja de dos columnas (--vcols): la
+   segunda columna arranca en la misma línea vertical en todo el bloque. */
+.gv-version-info{--vcols:minmax(0,1fr) minmax(0,1fr);--vgap:clamp(16px,2.4cqi,32px)}
+/* Dos mitades IGUALES y fijas: con max-content cada reja (datos, precio,
+   botones) calculaba su propio ancho y la línea vertical no coincidía. */
+.gv-version-ctas .gr-btn,.gv-version-price .gv-price-label{white-space:nowrap}
+.gv-version-price{
+  display:grid;grid-template-columns:var(--vcols);column-gap:var(--vgap);align-items:baseline;
+  padding-top:clamp(12px,1.3cqi,20px);border-top:1px solid rgba(10,10,15,.14);
+}
+.gv-version-price .gv-price-label{color:#6b6b72}
+.gv-version-price .gv-price{color:var(--ink);margin:0;font-size:clamp(22px,2.4cqi,36px)}
+.gv-version-ctas{display:grid;grid-template-columns:var(--vcols);column-gap:var(--vgap);margin-top:auto}
+.gv-version-ctas .gr-btn{justify-content:center;padding-inline:clamp(10px,1.2cqi,20px);width:100%;letter-spacing:.1em}
+/* Cotizar más corto: arranca en la línea de la 2ª columna y termina donde
+   termina el texto más largo de esa columna (--cot-w lo mide el JS). */
+.gv-version-ctas .gr-btn--line{width:var(--cot-w,100%);justify-self:start}
+/* La columna derecha termina en el borde del filete: precio alineado a la
+   derecha y Cotizar llenando su celda hasta el mismo borde. */
+.gv-version-price .gv-price{grid-column:2;grid-row:2;justify-self:start;width:var(--cot-w,auto);text-align:right}
+/* "Precio sugerido*" justo arriba del precio, alineado a su borde derecho */
+.gv-version-price .gv-price-label{grid-column:2;grid-row:1;justify-self:start;width:var(--cot-w,auto);text-align:right;margin-bottom:6px}
+/* "Modelo 2027": etiqueta GR en la columna izquierda, centrada con el
+   bloque del precio. En fondo claro va en tinta, no en blanco. */
+.gv-version-price{align-items:end}
+.gv-version-price .gv-version-year{
+  grid-column:1;grid-row:1 / 3;align-self:center;justify-self:start;margin:0 0 0 4px;
+  background:var(--ink);color:#fff;
+}
+/* Dos columnas a ancho de contenido: cada dato en una sola línea, etiqueta
+   arriba y valor abajo, ícono centrado a la izquierda. Si no entran, una. */
+.gv-vspecs{list-style:none;display:grid;grid-template-columns:var(--vcols);gap:clamp(16px,1.8cqi,26px) var(--vgap)}
+.gv-vspecs li{display:grid;grid-template-columns:auto minmax(0,1fr);justify-items:start;grid-template-rows:auto auto;column-gap:14px;row-gap:4px;align-items:center}
+.gv-vspec-k{align-self:end}
+.gv-vspec-v{align-self:start}
+
+.gv-vspec-ico{grid-row:span 2;width:clamp(30px,3cqi,40px);height:clamp(30px,3cqi,40px);display:flex;align-items:center;justify-content:center;border-radius:8px;background:#fff;color:var(--gr-red-ui)}
+.gv-vspec-ico svg{width:56%;height:56%}
+.gv-vspec-k{font-size:clamp(10px,.95cqi,11.5px);letter-spacing:.16em;text-transform:uppercase;color:#6b6b72}
+.gv-vspec-v{font-size:clamp(13px,1.25cqi,16px);line-height:1.3;color:var(--ink)}
+@media (max-width:860px){
+  .gv-version-body{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .gv-version-info{--vcols:minmax(0,1fr)}
+  /* Specs en 2 columnas también en móvil (en una sola quedaba muy largo):
+     ícono arriba, etiqueta y valor debajo */
+  .gv-vspecs{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 16px}
+  .gv-vspecs li{grid-template-columns:1fr;grid-template-rows:auto auto auto;row-gap:5px;align-items:start;align-content:start}
+  .gv-vspec-k,.gv-vspec-v{align-self:start}
+  .gv-vspec-ico{grid-row:auto;width:30px;height:30px;margin-bottom:3px}
+  .gv-vspec-v{font-size:13px}
+  .gv-version-price .gv-price{grid-column:1;grid-row:auto;justify-self:start;width:auto;text-align:left}
+  .gv-version-price .gv-price-label{grid-column:1;grid-row:auto;width:auto;text-align:left;margin-bottom:0}
+  .gv-version-price .gv-version-year{grid-row:auto;justify-self:start;margin:12px 0 0 4px}
+  .gv-version-ctas{row-gap:12px}
+  .gv-version-ctas .gr-btn{justify-content:center}
+  /* Los dos botones del mismo ancho (el JS mide --cot-w para escritorio) */
+  .gv-version-ctas .gr-btn--line{width:100%}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MATERIALES DESCARGABLES
+══════════════════════════════════════════════════════════════ */
+.gv-docs{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:clamp(12px,1.2vw,24px);list-style:none;
+}
+.gv-doc{
+  display:flex;flex-direction:column;gap:clamp(14px,1.4vw,26px);height:100%;
+  padding:clamp(18px,1.6vw,30px);
+  background:#f4f4f6;border-radius:clamp(12px,1vw,20px);
+  box-shadow:inset 0 0 0 1px transparent;
+  transition:box-shadow .25s,transform .25s var(--ease),background .25s;
+}
+.gv-doc:hover{background:#fff;box-shadow:inset 0 0 0 1.5px var(--gr-red-ui);transform:translateY(-3px)}
+.gv-doc-top{display:flex;align-items:center;justify-content:space-between}
+.gv-doc-ico{
+  width:clamp(38px,2.8vw,50px);height:clamp(38px,2.8vw,50px);
+  display:flex;align-items:center;justify-content:center;
+  /* Rojo, como el logo de Cobertura T10, para que los tres lean igual */
+  border-radius:9px;transform:skewX(-14deg);background:var(--gr-red-ui);color:#fff;
+}
+.gv-doc-ico svg{width:50%;height:50%;transform:skewX(14deg)}
+.gv-doc-logo{height:clamp(38px,2.8vw,50px);width:auto;display:block}   /* mismo alto que la caja de ícono */
+.gv-doc-type{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8a8a92}
+.gv-doc-name{
+  margin-top:auto;font-size:clamp(15px,1.2vw,21px);line-height:1.2;color:var(--ink);
+}
+.gv-doc-go{
+  display:inline-flex;align-items:center;gap:10px;
+  font-size:clamp(10.5px,.78vw,12.5px);letter-spacing:.18em;text-transform:uppercase;color:var(--gr-red-ui);
+}
+.gv-doc-go svg{width:14px;height:14px;transition:transform .25s var(--ease)}
+.gv-doc:hover .gv-doc-go svg{transform:translateY(2px)}
+/* Móvil: slider horizontal con snap. Cada card ocupa ~78 % del ancho y la
+   siguiente asoma por el borde, así se entiende que se desliza. Sale a
+   sangre hasta los bordes de la pantalla, como los carruseles del Home. */
+@media (max-width:760px){
+  .gv-docs{
+    grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:78%;
+    gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
+    margin-inline:calc(var(--pad-x) * -1);padding-inline:var(--pad-x);scroll-padding-inline:var(--pad-x);
+    padding-bottom:4px;
+  }
+  .gv-docs::-webkit-scrollbar{display:none}
+  .gv-docs{align-items:center}
+  .gv-docs > li{scroll-snap-align:start}
+  /* Cards más altas; la que se está viendo (.is-active, la marca el JS)
+     crece un poco más. El nombre y el enlace bajan al pie de la card. */
+  .gv-doc{padding:20px;min-height:190px;opacity:.6;transform:none;outline:1.5px solid transparent;outline-offset:-1.5px;transition:min-height .35s var(--ease),opacity .3s,outline-color .3s}
+  .gv-docs > li.is-active .gv-doc{min-height:230px;opacity:1;outline-color:var(--gr-red-ui)}
+  .gv-doc-name{font-size:16px}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GARANTÍA — franja roja, como la Boutique del Home
+══════════════════════════════════════════════════════════════ */
+.gv-warranty{position:relative;overflow:hidden;background:var(--gr-red-ui);padding:var(--sec-y) 0}
+.gv-warranty .gr-bq-stripes{
+  position:absolute;top:clamp(-30px,-2vw,-12px);right:clamp(-40px,-2.6vw,-16px);
+  width:clamp(180px,24vw,560px);height:auto;opacity:.35;pointer-events:none;
+}
+.gv-war-grid{
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;
+  gap:clamp(20px,2.4vw,44px) clamp(24px,4vw,96px);
+}
+/* El sello trae su propio marco gris y rojo: va sobre una placa blanca para
+   que no se funda con la franja roja. */
+.gv-war-seal{background:#fff;border-radius:clamp(12px,1vw,20px);padding:clamp(12px,1.2vw,22px);box-shadow:0 20px 50px -24px rgba(0,0,0,.6)}
+.gv-war-seal img{display:block;width:clamp(220px,22vw,400px);height:auto}
+.gv-war-head{grid-column:1 / -1;text-align:center;margin-bottom:clamp(8px,1vw,20px)}
+.gv-war-head .gr-eyebrow{color:rgba(255,255,255,.8)}
+/* Híbridos: dos cards iguales lado a lado (vehículo | sistema híbrido).
+   Cada una: sello arriba sobre blanco, título, resumen corto y el legal
+   completo plegado en "Ver condiciones". */
+.gv-warranty.is-hybrid .gv-war-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-areas:"head head" "s1 s2" "c1 c2";
+  column-gap:clamp(16px,2vw,32px);row-gap:0;align-items:stretch;
+}
+.gv-warranty.is-hybrid .gv-war-head{grid-area:head;margin-bottom:clamp(24px,2.6vw,44px)}
+.gv-warranty.is-hybrid .gv-war-seal{
+  grid-area:s1;margin:0;display:flex;align-items:center;justify-content:center;
+  border-radius:clamp(14px,1.2vw,22px) clamp(14px,1.2vw,22px) 0 0;
+  padding:clamp(22px,2.2vw,40px);box-shadow:none;
+}
+.gv-warranty.is-hybrid .gv-war-seal img{width:min(100%,320px)}
+.gv-warranty.is-hybrid .gv-war-hyb.gv-war-seal{grid-area:s2;margin:0}
+.gv-warranty.is-hybrid .gv-war-copy{
+  grid-area:c1;display:flex;flex-direction:column;
+  padding:clamp(20px,2vw,34px);
+  background:rgba(0,0,0,.22);border-radius:0 0 clamp(14px,1.2vw,22px) clamp(14px,1.2vw,22px);
+}
+.gv-warranty.is-hybrid .gv-war-hyb.gv-war-copy{grid-area:c2}
+.gv-warranty.is-hybrid .gv-war-copy p{font-size:clamp(12.5px,.9vw,14.5px);line-height:1.65;color:rgba(255,255,255,.9)}
+.gv-war-more{margin-top:auto;padding-top:clamp(14px,1.4vw,22px)}
+.gv-war-more summary{
+  list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:10px;
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.85);
+}
+.gv-war-more summary::-webkit-details-marker{display:none}
+.gv-war-more summary::after{content:'+';font-size:16px;transition:transform .25s var(--ease)}
+.gv-war-more[open] summary::after{transform:rotate(45deg)}
+.gv-war-more p{margin-top:12px;font-size:12px;line-height:1.65;color:rgba(255,255,255,.78)}
+@media (max-width:860px){
+  .gv-warranty.is-hybrid .gv-war-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"head" "s1" "c1" "s2" "c2"}
+  .gv-warranty.is-hybrid .gv-war-hyb.gv-war-seal{margin-top:20px}
+}
+/* Híbridos: dos bloques (vehículo + sistema híbrido), cada uno con su título */
+.gv-war-sub{
+  font-size:clamp(15px,1.3vw,22px);font-weight:400;line-height:1.2;letter-spacing:.06em;
+  text-transform:uppercase;color:#fff;margin-bottom:clamp(8px,.8vw,14px);
+}
+.gv-war-sub[hidden],.gv-war-hyb[hidden]{display:none}
+
+.gv-war-title{
+  font-size:clamp(24px,2.6vw,46px);font-weight:400;line-height:1.08;
+  letter-spacing:.02em;text-transform:uppercase;color:#fff;
+}
+.gv-war-big{display:flex;flex-direction:column;color:#fff}
+.gv-war-big .gr-eyebrow{color:rgba(255,255,255,.8)}
+.gv-war-num{
+  display:flex;align-items:baseline;gap:.18em;
+  font-size:clamp(70px,9vw,170px);line-height:.85;letter-spacing:-.02em;
+}
+.gv-war-num small{font-size:.26em;line-height:1.15;letter-spacing:.08em;text-transform:uppercase}
+.gv-war-km{
+  margin-top:clamp(8px,.8vw,14px);
+  font-size:clamp(16px,1.6vw,30px);letter-spacing:.06em;text-transform:uppercase;color:#fff;
+}
+.gv-war-copy{font-size:clamp(13px,1vw,17px);line-height:1.6;color:rgba(255,255,255,.92);max-width:70ch}
+.gv-war-copy b{font-weight:400;color:#fff;border-bottom:1px solid rgba(255,255,255,.5)}
+.gv-war-copy .gr-btn{margin-top:clamp(16px,1.6vw,28px)}
+@media (max-width:860px){
+  .gv-war-grid{grid-template-columns:1fr}
+  .gv-war-seal{justify-self:center}
+  .gv-war-seal img{width:min(300px,100%);margin-inline:auto}
+}
+
+/* Legales: plegados al pie de descargables */
+.gv-legal{margin-top:clamp(30px,3vw,60px);border-top:1px solid var(--line)}
+.gv-legal summary{
+  list-style:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:clamp(14px,1.2vw,20px) 0;
+  font-size:clamp(11px,.82vw,13px);letter-spacing:.2em;text-transform:uppercase;color:#6b6b72;
+}
+.gv-legal summary::-webkit-details-marker{display:none}
+.gv-legal summary::after{content:'+';font-size:20px;color:var(--gr-red-ui);transition:transform .25s var(--ease)}
+.gv-legal[open] summary::after{transform:rotate(45deg)}
+.gv-legal p{
+  padding-bottom:14px;max-width:150ch;
+  font-family:'ToyotaType',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;
+  font-size:12.5px;line-height:1.7;color:rgba(10,10,15,.55);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BARRA DE COMPRA FIJA (solo móvil)
+   Aparece cuando el hero sale de pantalla: en móvil la sub-nav no
+   lleva el botón de cotizar, así que el CTA vive acá.
+══════════════════════════════════════════════════════════════ */
+.gv-buybar{display:none}
+@media (max-width:1024px){
+  .gv-buybar{
+    position:fixed;left:0;right:0;bottom:0;z-index:950;
+    display:grid;grid-template-columns:1fr;gap:12px;
+    padding:12px var(--pad-x) calc(12px + env(safe-area-inset-bottom));
+    background:rgba(0,0,0,.9);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border-top:1px solid rgba(255,255,255,.12);
+    font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;font-synthesis:none;
+    transform:translateY(110%);transition:transform .32s var(--ease);
+  }
+  .gv-buybar.is-on{transform:none}
+  .gv-buybar a{text-decoration:none}
+  .gv-buybar .gr-btn{justify-content:center;padding:13px 10px;font-size:11px}
+  /* Que el footer no quede tapado por la barra */
+  body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
+}
+/* ── Enlace al sitio global de GR (requisito del Web guideline 3-2) ──
+   Separado de la nav por un filete vertical, con el ícono de globo y el
+   nombre del país, como el template. Lleva a toyotagazooracing.com. */
+.t-region{
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+  padding-left:clamp(14px,1.4vw,24px);margin-left:clamp(2px,.4vw,8px);
+  border-left:1px solid rgba(255,255,255,.22);
+  font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;font-synthesis:none;
+  font-size:clamp(10.5px,.82vw,13px);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;
+  color:rgba(255,255,255,.72);transition:color .2s;
+}
+.t-region:hover{color:#fff}
+.t-region svg{width:15px;height:15px;flex-shrink:0}
+.t-mobile-region{display:inline-flex;align-items:center;gap:10px}
+.t-mobile-region svg{width:18px;height:18px}
+
+/* ── Pie de marcas (template: logo Toyota con enlace al sitio global) ── */
+.t-footer-brands{
+  display:flex;align-items:center;flex-wrap:wrap;
+  margin-top:clamp(28px,2.8vw,48px);padding-block:clamp(16px,1.5vw,24px);
+  border-top:1px solid rgba(255,255,255,.12);
+}
+.t-footer-brands a{
+  display:flex;align-items:center;gap:10px;
+  padding:0 clamp(18px,1.8vw,30px);border-left:1px solid rgba(255,255,255,.22);border-right:1px solid rgba(255,255,255,.22);
+  font-family:'DecimaMonoPro',ui-monospace,SFMono-Regular,Menlo,monospace;font-synthesis:none;
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.72);
+}
+.t-footer-brands a + a{border-left:0}
+.t-footer-brands a:hover{color:#fff}
+.t-footer-brands img{height:18px;width:auto;filter:brightness(0) invert(1);opacity:.85}
+.t-footer-brands svg{width:15px;height:15px}
+/* Con el pie de marcas arriba, la fila de legales ya no lleva filete propio */
+.t-footer-brands + .t-footer-mid{border-top:0;margin-top:0;padding-top:clamp(10px,1vw,16px)}
+@media (max-width:1024px){
+  /* La reja de acordeones ya cierra con filete: sin línea doble */
+  .t-footer-brands{margin-top:clamp(14px,4vw,20px);gap:14px 0;border-top:0;padding-top:0}
+  .t-footer-brands a:first-child{padding-left:0;border-left:0}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER BLANCO — como el template del Web guideline 3-2: barra
+   blanca, logo con letras negras (gazoo-racing-lockup-white-bg.svg)
+   y nav en tinta. Pisa los colores de la barra negra de arriba.
+══════════════════════════════════════════════════════════════ */
+.t-header{
+  background:#fff;color:var(--ink);
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  border-bottom:1px solid var(--line);
+}
+.t-nav-link{color:rgba(10,10,15,.62)}
+.t-nav-link:hover,.t-nav-link.is-current{color:var(--ink)}
+.t-region{color:rgba(10,10,15,.62);border-left-color:rgba(10,10,15,.18)}
+.t-region:hover{color:var(--ink)}
+.t-wa{background:rgba(10,10,15,.06)}
+.t-wa img{filter:brightness(0);opacity:.8}
+.t-wa:hover img{filter:brightness(0) invert(1);opacity:1}
+.t-burger{color:var(--ink)}
+
+/* ══════════════════════════════════════════════════════════════
+   REVEAL al hacer scroll — desactivado si el usuario pide menos
+   movimiento, y anulado por completo sin JS (.no-js).
+══════════════════════════════════════════════════════════════ */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.reveal.is-in{opacity:1;transform:none}
+.reveal[data-d="1"]{transition-delay:.08s}
+.reveal[data-d="2"]{transition-delay:.16s}
+.reveal[data-d="3"]{transition-delay:.24s}
+.no-js .reveal{opacity:1;transform:none}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;scroll-behavior:auto !important;
+  }
+  .reveal{opacity:1;transform:none}
+}
+/* ══════════════════════════════════════════════════════════════
+   ESPACIADO MÓVIL — en ≤760 las medidas fluidas de desktop quedaban
+   en su mínimo y todo se veía apretado. Acá se abren en un solo lugar.
+══════════════════════════════════════════════════════════════ */
+@media (max-width:760px){
+  :root{--sec-y:56px}
+  .gr-eyebrow{margin-bottom:12px}
+  .gr-head,.gr-models-head{margin-bottom:26px}
+  .gr-head .gr-lead,.gr-models-head .gr-lead{margin-top:12px}
+
+  /* Colores */
+  .gv-color-name{margin-top:18px}
+  .gv-swatches{margin-top:16px}
+  .gv-swatches + .gv-fine{margin-top:14px}
+  .gv-viewer{margin-top:28px}
+  .gv-viewer-foot{margin-top:12px}
+  .gv-panel-price{margin-top:28px;padding-top:24px}
+  .gv-price{margin-top:8px}
+  .gv-panel-ctas{margin-top:22px}
+  .gv-panel > [data-model="priceLegal"]{margin-top:20px}
+
+  /* Galería */
+  .gv-tabs{margin-top:4px}
+  .gv-gal-foot{margin-top:18px}
+
+  /* Versión */
+  .gv-version-info{gap:20px;padding:24px 20px}
+  .gv-vspecs{row-gap:18px}
+  .gv-version-price{padding-top:18px}
+  .gv-version-price .gv-price{margin-top:8px}
+  .gv-version-ctas{row-gap:14px}
+
+  /* Garantía */
+  .gv-war-grid{gap:28px}
+  .gv-war-copy p{line-height:1.7}
+
+  /* Legales */
+  .gv-legal{margin-top:32px}
+}
+
+@media print{
+  .t-header,.gv-subnav,.gv-buybar,.gr-lb{display:none !important}
+}
+</style>
+</head>
+<body class="no-js">
+<script>document.body.classList.remove('no-js');</script>
+
+<a class="sr-only" href="#gr-main">Saltar al contenido</a>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER GR
+     Barra propia, con marca GR y solo los cuatro accesos que
+     aplican a esta landing. Los enlaces son absolutos porque la
+     página puede servirse fuera del dominio.
+═══════════════════════════════════════════════════════════ -->
+<header class="t-header" id="t-header">
+  <div class="t-header-inner">
+
+    <a class="t-logo" href="home.html" aria-label="GAZOO Racing Colombia — Inicio">
+      <img src="assets/icons/brand/gazoo-racing-lockup-white-bg.svg" alt="GAZOO Racing" width="964" height="112">
+    </a>
+
+    <!-- Mismo orden que gazooracing.com.co: Garaje GR · Historia · Alquila ·
+         Noticias · Cotizador · Concesionarios Toyota · WhatsApp.
+         Garaje GR es ancla interna porque esa sección vive en la propia
+         página; el resto sale del dominio.
+         El galón de Garaje GR es un <button> aparte y no parte del enlace:
+         el texto lleva a la sección y la flecha abre el mega-menú. -->
+    <nav class="t-nav" aria-label="Principal">
+      <button class="t-nav-link is-current" id="t-mega-btn" type="button"
+              aria-expanded="false" aria-controls="t-mega" aria-current="page">Garaje GR<i class="t-nav-caret" aria-hidden="true"></i></button>
+      <a class="t-nav-link" href="https://toyota.com.co/deportivos-tgr/historia">Historia</a>
+      <a class="t-nav-link" href="https://toyota.com.co/noticias">Noticias</a>
+      <a class="t-nav-link" href="https://www.toyota.com.co/cotiza-tu-toyota/vehiculos-nuevos">Cotizador</a>
+      <a class="t-nav-link" href="https://www.toyota.com.co/concesionarios">Concesionarios Toyota</a>
+      <a class="t-wa" href="https://api.whatsapp.com/send/?phone=573114810880&amp;text=Hola.+Quiero+m%C3%A1s+informaci%C3%B3n+sobre...&amp;type=phone_number&amp;app_absent=0" aria-label="Escríbenos por WhatsApp">
+        <img src="assets/toyota/whatsapp.svg" alt="" width="20" height="20">
+      </a>
+      <a class="t-region" href="https://toyotagazooracing.com" target="_blank" rel="noopener" aria-label="Sitio global de GAZOO Racing — Colombia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3z"/></svg>Colombia</a>
+    </nav>
+
+    <button class="t-burger" id="t-burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="t-mobile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M3 6h18M3 12h18M3 18h18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MEGA-MENÚ DE GARAJE GR
+       Los seis modelos, sus fotos y sus enlaces salen del menú de
+       gazooracing.com.co (API pública GetVehiclesHighlights, campos
+       vehiclename / vehicleimage / detailurl / cotizarurl / isnovedad).
+       Las fotos están descargadas en assets/menu/, no enlazadas al CDN.
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="t-mega" id="t-mega">
+    <div class="wrap is-10col">
+      <p class="t-mega-tab">Deportivos GR</p>
+
+      <ul class="t-mega-grid">
+        <li class="t-mega-card">
+          <p class="t-mega-name">Corolla GR-S</p>
+          <img class="t-mega-shot" src="assets/menu/corolla-gr-s.png" alt="Toyota Corolla GR-S" width="290" height="133" loading="lazy">
+          <p class="t-mega-links">
+            <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/corolla-gr-s">Ver detalles</a>
+            <a href="https://gazooracing.com.co/cotizador/corolla">Cotizar</a>
+          </p>
+        </li>
+
+        <li class="t-mega-card">
+          <p class="t-mega-name">Corolla Cross GR-S</p>
+          <img class="t-mega-shot" src="assets/menu/corolla-cross-gr-s.png" alt="Toyota Corolla Cross GR-S" width="290" height="133" loading="lazy">
+          <p class="t-mega-links">
+            <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/corolla-cross-gr-s">Ver detalles</a>
+            <a href="https://gazooracing.com.co/cotizador/corolla-cross">Cotizar</a>
+          </p>
+        </li>
+
+        <li class="t-mega-card">
+          <p class="t-mega-name">GR Yaris <span class="t-mega-tag"><span>Novedad</span></span></p>
+          <img class="t-mega-shot" src="assets/menu/gr-yaris.webp" alt="Toyota GR Yaris" width="611" height="291" loading="lazy">
+          <p class="t-mega-links">
+            <a href="interna-general.html" aria-current="page">Ver detalles</a>
+            <a href="https://gazooracing.com.co/cotizador/yaris-gr">Cotizar</a>
+          </p>
+        </li>
+
+        <li class="t-mega-card">
+          <p class="t-mega-name">RAV4 PHEV GR-S <span class="t-mega-tag"><span>Novedad</span></span></p>
+          <img class="t-mega-shot" src="assets/menu/rav4-phev-gr-s.png" alt="Toyota RAV4 PHEV GR-S" width="1160" height="532" loading="lazy">
+          <p class="t-mega-links">
+            <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/rav4-phev-gr-s">Ver detalles</a>
+            <a href="https://gazooracing.com.co/cotizador/rav4">Cotizar</a>
+          </p>
+        </li>
+
+        <li class="t-mega-card">
+          <p class="t-mega-name">Hilux GR-S</p>
+          <img class="t-mega-shot" src="assets/menu/hilux-gr-s.png" alt="Toyota Hilux GR-S" width="290" height="133" loading="lazy">
+          <p class="t-mega-links">
+            <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/hilux-gr-s-iv">Ver detalles</a>
+            <a href="https://gazooracing.com.co/cotizador/hilux">Cotizar</a>
+          </p>
+        </li>
+
+        <li class="t-mega-card">
+          <p class="t-mega-name">Fortuner GR-S</p>
+          <img class="t-mega-shot" src="assets/menu/fortuner-gr-s.png" alt="Toyota Fortuner GR-S" width="290" height="133" loading="lazy">
+          <p class="t-mega-links">
+            <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/fortuner-gr-s">Ver detalles</a>
+            <a href="https://gazooracing.com.co/cotizador/fortuner">Cotizar</a>
+          </p>
+        </li>
+
+        <li class="t-mega-card">
+          <p class="t-mega-name">Land Cruiser 300 GR-S HEV <span class="t-mega-tag"><span>Novedad</span></span></p>
+          <img class="t-mega-shot" src="assets/menu/lc300-hev-gr-s.png" alt="Toyota Land Cruiser 300 GR-S HEV" width="1160" height="532" loading="lazy">
+          <p class="t-mega-links">
+            <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/lc300-hev-gr-s">Ver detalles</a>
+            <a href="https://gazooracing.com.co/cotizador/lc300-hev-gr-s">Cotizar</a>
+          </p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<!-- Panel del header en móvil (≤900px) -->
+<div class="t-mobile" id="t-mobile" aria-hidden="true">
+  <div class="t-mobile-head">
+    <img src="assets/icons/brand/gazoo-racing-lockup.svg" alt="GAZOO Racing" width="964" height="112">
+    <button class="t-mobile-close" id="t-mobile-close" aria-label="Cerrar menú">&#10005;</button>
+  </div>
+  <nav aria-label="Menú móvil">
+    <button class="t-mobile-flat t-mobile-flat--sub is-current" id="t-msub-open" type="button"
+            aria-expanded="false" aria-controls="t-msub" aria-current="page">Garaje GR</button>
+    <a class="t-mobile-flat" href="https://toyota.com.co/deportivos-tgr/historia">Historia</a>
+    <a class="t-mobile-flat" href="https://toyota.com.co/noticias">Noticias</a>
+
+    <div class="t-mobile-util">
+      <a href="https://www.toyota.com.co/cotiza-tu-toyota/vehiculos-nuevos">Cotizador</a>
+      <a href="https://www.toyota.com.co/concesionarios">Concesionarios Toyota</a>
+      <a class="t-mobile-wa" href="https://api.whatsapp.com/send/?phone=573114810880&amp;text=Hola.+Quiero+m%C3%A1s+informaci%C3%B3n+sobre...&amp;type=phone_number&amp;app_absent=0" aria-label="Escríbenos por WhatsApp">
+        <img src="assets/toyota/whatsapp.svg" alt="" width="20" height="20">
+      </a>
+      <a class="t-mobile-region" href="https://toyotagazooracing.com" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3z"/></svg>GR Global · Colombia</a>
+    </div>
+  </nav>
+
+  <!-- Sub-panel de Garaje GR. Las tarjetas NO están escritas acá: el JS las
+       clona del mega-menú del desktop para no tener los siete modelos
+       duplicados en el HTML. -->
+  <div class="t-msub" id="t-msub" aria-hidden="true">
+    <div class="t-msub-head">
+      <button class="t-msub-back" id="t-msub-back" type="button" aria-label="Volver al menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="t-msub-title">Garaje GR</span>
+      <button class="t-msub-close" id="t-msub-close" type="button" aria-label="Cerrar menú">&#10005;</button>
+    </div>
+
+    <p class="t-msub-tab">Deportivos GR</p>
+    <ul class="t-msub-list" id="t-msub-list"></ul>
+  </div>
+</div>
+
+
+<main class="gr" id="gr-main">
+
+<!-- ═══════════════════════════════════════════════════════════
+     BANNER DEL MODELO — una foto completa por tamaño:
+       desktop  assets/banners/<slug>-banner-desktop.webp · 3840×1190
+       móvil    assets/banners/<slug>-banner-mobile.jpg   · 1000×667 (3:2)
+     El auto centrado. Componer sobre las plantillas
+     assets/banners/plantilla-banner-desktop.svg / -mobile.svg.
+     Nombre en el HTML; precio, legales y sellos salen de MODEL.
+     Abrir con ?guias en la URL para ver las zonas.
+═══════════════════════════════════════════════════════════ -->
+<section class="gv-banner" id="resumen">
+  <div class="gv-banner-media">
+    <img class="gv-banner-ext" src="assets/banners/gr-yaris-banner-desktop.webp" alt="" aria-hidden="true">
+    <div class="gv-banner-photo">
+    <picture>
+      <source media="(max-width:760px)" srcset="assets/banners/gr-yaris-banner-mobile.jpg">
+      <img class="gv-banner-img" src="assets/banners/gr-yaris-banner-desktop.webp" alt="Toyota GR Yaris rojo" width="3840" height="1190" fetchpriority="high">
+    </picture>
+    </div>
+    <div class="gv-banner-scrim" aria-hidden="true"></div>
+  </div>
+
+  <div class="wrap is-10col gv-banner-in">
+    <div class="gv-banner-text">
+      <div class="gv-hero-tags">
+        <span class="gr-eyebrow">Deportivos GR</span>
+        <span class="t-mega-tag"><span>Novedad</span></span>
+      </div>
+      <h1 class="gv-name"><em>GR</em> Yaris</h1>
+    </div>
+
+    <div class="gv-buy">
+      <span class="gv-price-label">Desde:</span>
+      <span class="gv-price" data-model="price">$000.000.000</span>
+      <p class="gv-buy-legal" data-model="legal">*Precio sugerido al público. *Imágenes de referencia.</p>
+    </div>
+
+    <div class="gv-banner-foot">
+      <ul class="gv-seals" id="gv-seals" aria-label="Sellos de seguridad"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SUB-NAV DE SECCIONES (sticky). El scrollspy marca la activa.
+═══════════════════════════════════════════════════════════ -->
+<nav class="gv-subnav" aria-label="Secciones del modelo">
+  <div class="wrap is-10col gv-subnav-inner">
+    <span class="gv-subnav-model"><em>GR</em> Yaris</span>
+    <ul class="gv-subnav-links" id="gv-subnav-links">
+      <li><a href="#resumen">Resumen</a></li>
+      <li><a href="#colores">Colores</a></li>
+      <li><a href="#galeria">Galería</a></li>
+      <li><a href="#diferenciales">Diferenciales</a></li>
+      <li><a href="#versiones">Especificaciones</a></li>
+      <li><a href="#descargables">Descargables</a></li>
+      <li><a href="#garantia">Garantía</a></li>
+    </ul>
+    <a class="gr-btn gr-btn--red gv-subnav-cta" data-model-href="cotizar" href="https://gazooracing.com.co/cotizador/yaris-gr"><span>Cotizar</span></a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PRESENTACIÓN — el texto del modelo, en sección propia y antes
+     del configurador de color
+═══════════════════════════════════════════════════════════ -->
+<section class="gv-intro" id="presentacion">
+  <div class="wrap is-10col">
+    <div class="gv-intro-in reveal">
+      <h2 class="gr-title" data-model="introTitle">El ADN de un campeón de Rally</h2>
+      <p class="gr-lead" data-model="introText"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     COLORES
+═══════════════════════════════════════════════════════════ -->
+<section class="gr-section gv-colors" id="colores">
+  <div class="wrap is-10col">
+    <div class="gv-colors-grid">
+      <div class="gv-viewer reveal">
+        <div class="gv-stage">
+          <img class="gv-stage-car" id="gv-stage-car" src="" alt="" width="1316" height="576">
+        </div>
+        <div class="gv-viewer-foot">
+          <!-- Solo aparece si el modelo trae frames 360 (MODEL.colors[].spin) -->
+          <p class="gv-drag-hint" id="gv-drag-hint" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.5V5a1.5 1.5 0 0 1 3 0v5.5"/><path d="M12 10V8.5a1.5 1.5 0 0 1 3 0V11"/><path d="M15 10.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.9-2.6L4.2 15.2a1.6 1.6 0 0 1 2.4-2.1L9 15"/><path d="M3 5.5h3M3 5.5l1.4-1.4M3 5.5l1.4 1.4M21 5.5h-3M21 5.5l-1.4-1.4M21 5.5l-1.4 1.4"/></svg>
+            Arrastra para girar
+          </p>
+          <p class="gv-fine">*Imágenes de referencia</p>
+        </div>
+      </div>
+
+      <div class="gv-panel reveal" data-d="1">
+        <h2 class="gr-eyebrow gv-colors-title">Selecciona un color</h2>
+        <p class="gv-color-name" id="gv-color-name" aria-live="polite">—</p>
+        <ul class="gv-swatches" id="gv-swatches" aria-label="Colores disponibles"></ul>
+        <p class="gv-fine">*Los colores pueden variar por cada versión.</p>
+
+        <div class="gv-panel-price">
+          <span class="gv-price-label">*Precio sugerido al público</span>
+          <span class="gv-price" data-model="price">$218.900.000</span>
+          <span class="gv-year"><span>Modelo <span data-model="year">2027</span></span></span>
+        </div>
+        <div class="gv-panel-ctas">
+          <a class="gr-btn gr-btn--red" data-model-href="cotizar" href="https://gazooracing.com.co/cotizador/yaris-gr">
+            <span>Cotizar
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </a>
+          <!-- Abre el PDF de la ficha (MODEL.fichaPdf) -->
+          <a class="gr-btn gr-btn--ghost" data-model-href="fichaPdf" href="#" target="_blank" rel="noopener"><span>Ver ficha técnica</span></a>
+        </div>
+        <p class="gv-fine" data-model="priceLegal"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     GALERÍA — Exterior / Interior. Las piezas salen de MODEL.gallery.
+═══════════════════════════════════════════════════════════ -->
+<section class="gr-gallery" id="galeria">
+  <div class="wrap is-10col">
+    <div class="gv-head-row">
+      <header class="gr-head reveal">
+        <span class="gr-eyebrow">Galería de imágenes</span>
+        <h2 class="gr-title">Creado en competición</h2>
+        <p class="gr-lead">Diseñado para dominar cada curva.</p>
+      </header>
+      <div class="gv-tabs" role="tablist" aria-label="Galería">
+        <button class="gv-tab" role="tab" id="gv-tab-ext" aria-selected="true" aria-controls="gv-gal-ext" type="button"><span>Exterior</span></button>
+        <button class="gv-tab" role="tab" id="gv-tab-int" aria-selected="false" aria-controls="gv-gal-int" type="button" tabindex="-1"><span>Interior</span></button>
+      </div>
+    </div>
+
+    <div class="gr-gal-grid" id="gv-gal-ext" role="tabpanel" aria-labelledby="gv-tab-ext"></div>
+    <div class="gr-gal-grid" id="gv-gal-int" role="tabpanel" aria-labelledby="gv-tab-int" hidden></div>
+
+    <div class="gv-gal-foot">
+      <p class="gr-disclaimer">*Imágenes de referencia</p>
+      <a class="gr-btn gr-btn--line" data-model-href="galeria" href="#"><span>Ver la galería completa</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     DIFERENCIALES — "Razones para tener un GR Yaris"
+═══════════════════════════════════════════════════════════ -->
+<section class="gr-section" id="diferenciales">
+  <!-- Misma composición que el carrusel de modelos del Home: encabezado y
+       flechas a la izquierda, piezas a la derecha. En móvil se apila y las
+       flechas quedan debajo (por eso la nav va después de la lista). -->
+  <div class="wrap is-10col gr-models">
+    <header class="gr-models-head reveal">
+      <span class="gr-eyebrow">Diferenciales</span>
+      <h2 class="gr-title">Razones para tener un GR Yaris</h2>
+    </header>
+
+    <ol class="gr-vgrid gv-reasons reveal" id="gv-reasons"></ol>
+
+    <div class="gr-vnav">
+      <button class="gr-vnav-btn" id="gv-rs-prev" type="button" aria-label="Diferencial anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="gr-vnav-count" id="gv-rs-count" aria-live="polite"></span>
+      <button class="gr-vnav-btn" id="gv-rs-next" type="button" aria-label="Diferencial siguiente">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     VERSIONES — "Encuentra tu versión"
+═══════════════════════════════════════════════════════════ -->
+<section class="gr-section" id="versiones">
+  <div class="wrap is-10col gv-versions-wrap">
+    <header class="gr-head reveal">
+      <span class="gr-eyebrow">Ficha técnica</span>
+      <h2 class="gr-title">Especificaciones generales</h2>
+    </header>
+    <ul class="gv-versions reveal" id="gv-versions"></ul>
+    <!-- Solo aparece con más de una versión (el JS la activa) -->
+    <div class="gr-vnav gv-versions-nav" id="gv-vs-nav" hidden>
+      <button class="gr-vnav-btn" id="gv-vs-prev" type="button" aria-label="Versión anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="gr-vnav-count" id="gv-vs-count" aria-live="polite"></span>
+      <button class="gr-vnav-btn" id="gv-vs-next" type="button" aria-label="Versión siguiente">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MATERIALES DESCARGABLES + LEGALES
+═══════════════════════════════════════════════════════════ -->
+<section class="gr-section gv-light" id="descargables">
+  <div class="wrap is-10col">
+    <header class="gr-head reveal">
+      <span class="gr-eyebrow">Documentos</span>
+      <h2 class="gr-title">Materiales descargables</h2>
+    </header>
+    <ul class="gv-docs reveal" id="gv-docs"></ul>
+
+    <details class="gv-legal">
+      <summary>Legales</summary>
+      <p>**Imágenes de referencia. Precio sugerido al público por Automotores Toyota Colombia S.A.S a nivel nacional. Para mayor información dirija su consulta al concesionario autorizado de su preferencia. Estos valores incluyen IVA, Imp. Consumo e impuestos internos vigentes, aplicables de acuerdo con el tipo de vehículo. Los precios pueden variar según el concesionario de la Red Autorizada escogido. Automotores Toyota Colombia S.A.S no vende sus productos al público de manera directa y por ello, los precios indicados resultan sugeridos al público en los Concesionarios Oficiales.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     GARANTÍA — "Beneficios de tener un Toyota"
+═══════════════════════════════════════════════════════════ -->
+<section class="gv-warranty" id="garantia">
+  <img class="gr-bq-stripes" src="assets/elements/gr-stripes.png" alt="" aria-hidden="true" loading="lazy">
+  <div class="wrap is-10col gv-war-grid">
+    <header class="gv-war-head reveal">
+      <span class="gr-eyebrow">Beneficios de tener un Toyota</span>
+      <h2 class="gv-war-title" data-model="warTitle">5 años de garantía o 120.000 km</h2>
+    </header>
+    <div class="gv-war-seal reveal">
+      <img id="gv-war-seal" src="assets/icons/warranty/garantia-standard.svg" alt="Garantía especial Toyota" width="398" height="210" loading="lazy">
+    </div>
+    <div class="gv-war-copy reveal" data-d="1">
+      <h3 class="gv-war-sub" data-model="warTitle" hidden></h3>
+      <p data-model="warText"></p>
+    </div>
+    <!-- Solo en híbridos (MODEL.warrantyHybrid): garantía del sistema híbrido -->
+    <div class="gv-war-seal gv-war-hyb reveal" hidden>
+      <img id="gv-war-seal-hyb" src="assets/icons/warranty/garantia-hibrido.webp" alt="Garantía sistema híbrido Toyota" width="1024" height="537" loading="lazy">
+    </div>
+    <div class="gv-war-copy gv-war-hyb reveal" data-d="1" hidden>
+      <h3 class="gv-war-sub" data-model="warHybTitle"></h3>
+      <p data-model="warHybText"></p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- Barra de compra fija — solo móvil, aparece al pasar el hero -->
+<div class="gv-buybar" id="gv-buybar">
+  <a class="gr-btn gr-btn--red" data-model-href="cotizar" href="https://gazooracing.com.co/cotizador/yaris-gr"><span>Cotizar</span></a>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LIGHTBOX de la galería
+═══════════════════════════════════════════════════════════ -->
+<div class="gr-lb" id="gr-lb" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Visor de galería">
+  <div class="gr-lb-backdrop" data-lb-close></div>
+  <div class="gr-lb-frame">
+    <img class="gr-lb-img" id="gr-lb-img" alt=""><!-- src lo pone el JS al abrir -->
+    <span class="gv-ref gv-ref--lb">*Imágenes de referencia</span>
+    <button class="gr-lb-close" id="gr-lb-close" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <span>Cerrar</span>
+    </button>
+  </div>
+  <button class="gr-lb-nav gr-lb-prev" id="gr-lb-prev" type="button" aria-label="Imagen anterior">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+  <button class="gr-lb-nav gr-lb-next" id="gr-lb-next" type="button" aria-label="Imagen siguiente">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+  </button>
+  <div class="gr-lb-cap">
+    <span class="gr-lb-label" id="gr-lb-label"></span>
+    <span class="gr-lb-count" id="gr-lb-count"></span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FOOTER GR
+     Contenido (columnas, enlaces y legales) del footer real de
+     gazooracing.com.co; la estructura es la nuestra:
+       1 · logo a la izquierda + las cuatro columnas a su derecha
+       2 · legales + Instagram
+       3 · copyright
+       4 · accesibilidad / privacidad / cookies
+═══════════════════════════════════════════════════════════ -->
+<footer class="t-footer">
+
+  <div class="wrap is-10col t-footer-top">
+
+    <a class="t-footer-brand" href="home.html" aria-label="GAZOO Racing Colombia — Inicio">
+      <img class="t-footer-logo" src="assets/icons/brand/gazoo-racing-lockup.svg" alt="GAZOO Racing" width="964" height="112" loading="lazy">
+    </a>
+
+    <div class="t-footer-cols">
+
+      <div class="t-footer-col">
+        <button class="t-footer-acc-btn" type="button" aria-expanded="false">Vehículos <span class="t-footer-acc-icon" aria-hidden="true">+</span></button>
+        <span class="t-footer-title">Vehículos</span>
+        <div class="t-footer-body"><div><div class="t-footer-list">
+          <a href="https://www.toyota.com.co/cotiza-tu-toyota/vehiculos-nuevos">Toyota</a>
+        </div></div></div>
+      </div>
+
+      <div class="t-footer-col">
+        <button class="t-footer-acc-btn" type="button" aria-expanded="false">Acerca de GR <span class="t-footer-acc-icon" aria-hidden="true">+</span></button>
+        <span class="t-footer-title">Acerca de GR</span>
+        <div class="t-footer-body"><div><div class="t-footer-list">
+          <a href="https://www.toyota.com.co/mi-toyota/campanas-de-seguridad-y-servicios">Campañas de seguridad</a>
+          <a href="https://www.toyota.com.co/mi-toyota/mantenimiento">Mantenimiento Toyota</a>
+          <a href="https://www.toyota.com.co/cotiza-tu-toyota/financiacion-toyota">Financia tu Toyota</a>
+          <a href="https://www.toyota.com.co/noticias">Noticias</a>
+          <a href="https://www.toyota.com.co/deportivos-tgr/inicio">GAZOO Racing</a>
+        </div></div></div>
+      </div>
+
+      <div class="t-footer-col">
+        <button class="t-footer-acc-btn" type="button" aria-expanded="false">Enlaces Útiles <span class="t-footer-acc-icon" aria-hidden="true">+</span></button>
+        <span class="t-footer-title">Enlaces Útiles</span>
+        <div class="t-footer-body"><div><div class="t-footer-list">
+          <a href="https://www.kinto-mobility.com.co/kinto-share#no-back">Alquila tu Toyota</a>
+          <a href="https://www.canaldeintegridadtoyotacolombia.com/">Canal de Integridad</a>
+          <a href="https://www.toyota.com.co/pqrs">PQR</a>
+          <a href="https://www.supersociedades.gov.co/es/web/asuntos-economicos-societarios/denuncias-soborno-transnacional">Denuncias sobre soborno transnacional</a>
+          <a href="https://portal.paco.gov.co/index.php?pagina=denuncie">Denuncias sobre Actos de corrupción</a>
+        </div></div></div>
+      </div>
+
+      <div class="t-footer-col">
+        <button class="t-footer-acc-btn" type="button" aria-expanded="false">Contáctanos <span class="t-footer-acc-icon" aria-hidden="true">+</span></button>
+        <span class="t-footer-title">Contáctanos</span>
+        <div class="t-footer-body"><div><div class="t-footer-list">
+          <a href="https://www.toyota.com.co/cotiza-tu-toyota/vehiculos-nuevos">Cotizador</a>
+          <a href="https://www.toyota.com.co/contacto">Contacto</a>
+        </div></div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="wrap is-10col">
+
+    <div class="t-footer-brands">
+      <a href="https://global.toyota/" target="_blank" rel="noopener" aria-label="Toyota — sitio global"><img src="assets/toyota/logo.svg" alt="Toyota" width="170" height="29" loading="lazy"></a>
+      <a href="https://toyotagazooracing.com" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3z"/></svg>GR Global · Colombia</a>
+    </div>
+
+    <div class="t-footer-mid">
+      <div class="t-footer-links">
+        <a href="#">Política de seguridad SGCS</a>
+        <a href="#">Términos y Condiciones</a>
+        <a href="#">Políticas y Privacidad</a>
+        <a href="https://www.toyota.com.co/pqrs">PQR</a>
+        <a href="#">Accesibilidad</a>
+        <a href="#">Opciones de Privacidad</a>
+        <a href="#">Consentimiento de Cookies</a>
+      </div>
+
+      <!-- Solo Instagram, igual que gazooracing.com.co. Los PNG de Facebook,
+           YouTube, X y TikTok siguen en assets/toyota/ por si vuelven. -->
+      <div class="t-footer-social">
+        <a href="https://www.instagram.com/toyotacolombia/" target="_blank" rel="noopener" aria-label="Instagram">
+          <img src="assets/toyota/instagram.png" alt="" loading="lazy"></a>
+      </div>
+    </div>
+
+    <div class="t-footer-legal">
+      <span>&copy; 2026 Automotores Toyota Colombia S.A.S.</span>
+      <span>Todos los derechos reservados.</span>
+      <span>La información aquí presente se aplica solo a vehículos en Colombia.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ══════════════════════════════════════════════════════════
+     0 · ÍCONOS — los del Home + los de esta plantilla
+  ══════════════════════════════════════════════════════════ */
+  var S = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+  var ICON = {
+    turbo:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="2.4"/><path d="M12 4.8v2.8M19.2 12h-2.8M12 19.2v-2.8M4.8 12h2.8"/></svg>',
+    power:  '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.2 2 4.6 13.4h6.1L9.4 22l8.9-11.7h-6.2z"/></svg>',
+    gear:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 5.5v13M17 5.5v13M7 12h10"/><circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none"/></svg>',
+    engine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8.5A2.5 2.5 0 0 1 6.5 6h5A2.5 2.5 0 0 1 14 8.5V20"/><path d="M3 20h12M14 11.5h2.6a2 2 0 0 1 2 2v3.4a1.45 1.45 0 0 0 2.9 0v-6.6l-2.4-2.4"/></svg>',
+    seats:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="3.1"/><path d="M5.6 20a6.4 6.4 0 0 1 12.8 0"/></svg>',
+    awd:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="7" r="2.3"/><circle cx="17" cy="7" r="2.3"/><circle cx="7" cy="17" r="2.3"/><circle cx="17" cy="17" r="2.3"/><path d="M9.3 7h5.4M9.3 17h5.4M7 9.3v5.4M17 9.3v5.4"/></svg>',
+    hybrid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="7.2" width="15.4" height="9.6" rx="2.2"/><path d="M20.6 10.6v2.8"/><path d="M10.9 9.9 8.4 13.1h3.2l-1 2.6"/></svg>',
+    // Seguridad
+    abs:    '<svg ' + S + '><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3"/></svg>',
+    esc:    '<svg ' + S + '><path d="M6 15.5l1.6-5A2 2 0 0 1 9.5 9h5a2 2 0 0 1 1.9 1.5l1.6 5"/><rect x="4.5" y="15.5" width="15" height="3.5" rx="1.2"/><path d="M5 22c2-1.6 4-1.6 6 0s4 1.6 6 0"/></svg>',
+    pcs:    '<svg ' + S + '><path d="M3 17l1.4-4.2A2 2 0 0 1 6.3 11.5h5.4a2 2 0 0 1 1.9 1.3L15 17"/><rect x="2" y="17" width="14" height="3" rx="1"/><path d="M18.5 8.5v5M18.5 16.5v.01"/></svg>',
+    isofix: '<svg ' + S + '><path d="M8 3.5h4.5a3 3 0 0 1 3 3V13"/><path d="M6 10h9.5v6a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z"/><path d="M9 21.5v-2.5M12.5 21.5v-2.5"/></svg>',
+    airbag: '<svg ' + S + '><circle cx="8" cy="5.5" r="2"/><path d="M8 9v5l-2.5 6.5M8 14h4l2 6"/><circle cx="16.5" cy="9.5" r="4"/></svg>',
+    // Diferenciales
+    rally:  '<svg ' + S + '><path d="M4 21V4"/><path d="M4 4h13l-2.5 4L17 12H4"/><path d="M8.5 4v8M13 4v8M4 8h13"/></svg>',
+    body:   '<svg ' + S + '><path d="M3 15.5l2-5.2A2.5 2.5 0 0 1 7.3 8.7h7.2a2.5 2.5 0 0 1 2 1l3.5 4.3v1.5"/><path d="M3 15.5h18"/><circle cx="7" cy="16" r="2"/><circle cx="17" cy="16" r="2"/><path d="M10 8.7V5.5h4"/></svg>',
+    brake:  '<svg ' + S + '><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2"/><path d="M6.5 6.5a8 8 0 0 0 0 11"/><path d="M15.5 4.8v3.2M19.2 8.5h-3.2"/></svg>',
+    susp:   '<svg ' + S + '><path d="M12 3v3M12 18v3"/><path d="M8 6h8M8 18h8"/><path d="M9 8.5l6 1.5-6 1.5 6 1.5-6 1.5 6 1.5"/></svg>',
+    door:   '<svg ' + S + '><path d="M5 21V5.5A2.5 2.5 0 0 1 7.5 3H17a2 2 0 0 1 2 2v16"/><path d="M3 21h18M15 12.5h1.5"/><path d="M5 10.5 12 3"/></svg>',
+    // Descargables
+    doc:    '<svg ' + S + '><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
+    shield: '<svg ' + S + '><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/><path d="M8.8 12.2l2.2 2.2 4.3-4.6"/></svg>',
+    wheel:  '<svg ' + S + '><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/><path d="M12 14.2v6.3M10 11.2 4.2 9.2M14 11.2l5.8-2"/></svg>',
+    download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></svg>'
+  };
+
+  /* ══════════════════════════════════════════════════════════
+     1 · DATOS DEL MODELO — el único lugar que se edita para
+     armar la landing de otro vehículo.
+
+     Fuente: gazooracing.com.co/vehiculos/deportivos-tgr/yaris-gr,
+     revisada el 15/10/2026 (precio vigente 01/10–31/10/2026).
+     Las fotos están descargadas en assets/vehiculos/gr-yaris/,
+     no enlazadas al CDN de Toyota.
+  ══════════════════════════════════════════════════════════ */
+  var V = 'assets/vehiculos/gr-yaris/';
+  var MODEL = {
+    name: 'GR Yaris',
+    year: '2027',
+    price: '$218.900.000',
+    cotizar:   'https://gazooracing.com.co/cotizador/yaris-gr',
+    testDrive: 'https://toyota.com.co/cotiza-tu-toyota/test-drive',
+    galeria:   'galeria-general.html',
+    fichaPdf:  'https://content.toyota.com.co/toyota-images/images/pdf/ft-gr-yaris-2027.pdf',
+
+    // Legales del banner
+    legal: '*Precio sugerido al público. *Imágenes de referencia.',
+    // Legal del precio (bloque de colores)
+    priceLegal: '*Precio sugerido al público por Automotores Toyota Colombia S.A.S a nivel nacional, vigente desde el 01/10/2026 hasta el 31/10/2026. Estos valores incluyen impuestos aplicables de acuerdo con el tipo de vehículo y el mantenimiento planeado Toyota. Los precios pueden variar según el concesionario de la Red Autorizada escogido.',
+
+    // Sellos de seguridad del banner. Cambian por vehículo: van solo los que
+    // aplican. La leyenda va como TEXTO (label), no la del SVG: así se corrige
+    // por modelo — p. ej. la cantidad de bolsas de aire — sin rehacer el sello.
+    seals: [
+      { src:'assets/icons/safety/sello-1.svg', label:'Sistema antibloqueo de frenos' },
+      { src:'assets/icons/safety/sello-2.svg', label:'Control electrónico de estabilidad' },
+      { src:'assets/icons/safety/sello-3.svg', label:'Alerta de colisión frontal' },
+      { src:'assets/icons/safety/sello-4.svg', label:'ISOFIX sistema de sujeción infantil' },
+      { src:'assets/icons/safety/sello-5.svg', label:'Bolsas de aire (6)' }
+    ],
+
+    intro: {
+      title: 'El ADN de un campeón de Rally',
+      text:  'Descubre toda la emoción de Gazoo Racing reflejada en el nuevo GR Yaris. Nacido en el Rally, rediseñado con el enfoque de maximizar el desempeño, la precisión y la conexión entre el conductor y el vehículo para la carretera y la pista.'
+    },
+
+    // swatch = muestra del color · img = render en vista 3/4 (la base de
+    // todos los modelos) · spin = OPCIONAL, frames del 360: carpeta, cantidad
+    // y en qué frame está la vista 3/4. Sin spin, el visor es foto fija.
+    // fit = OPCIONAL, escala de respaldo si los renders vienen encuadrados
+    // distinto. Mejor normalizar las imágenes (ver LEEME): el GR Yaris ya
+    // viene normalizado y no lo usa.
+    colors: [
+      { name:'Blanco perla metalizado', swatch:V + 'colores/blanco-perla-metalizado-muestra.png', img:V + 'colores/blanco-perla-metalizado-34.webp',
+        spin:{ path:V + 'colores/360/blanco-perla-metalizado/', count:12, start:2 } },
+      { name:'Gris perlado',            swatch:V + 'colores/gris-perlado-muestra.png',            img:V + 'colores/gris-perlado-34.webp',
+        spin:{ path:V + 'colores/360/gris-perlado/', count:12, start:2 } },
+      { name:'Rojo metalizado',         swatch:V + 'colores/rojo-metalizado-muestra.png',         img:V + 'colores/rojo-metalizado-34.webp',
+        spin:{ path:V + 'colores/360/rojo-metalizado/', count:12, start:2 } }
+    ],
+
+    // Las 6 primeras arman el bento (1 grande · 2 chicas · 1 apaisada ·
+    // 2 altas); el resto no se ve en la reja pero entra en el visor.
+    gallery: {
+      exterior: [
+        V + 'galeria/new-exterior-2.jpg', V + 'galeria/exterior-2.jpg', V + 'galeria/exterior-4.jpg',
+        { src:V + 'galeria/exterior-5.jpg', pos:'center 72%' }, V + 'galeria/new-exterior-1.jpg', V + 'galeria/new-exterior-3.jpg',
+        V + 'galeria/new-exterior-4.jpg', V + 'galeria/exterior-1.jpg', V + 'galeria/exterior-3.jpg',
+        V + 'galeria/exterior-6.jpg',     V + 'galeria/exterior-7.jpg'
+      ],
+      interior: [
+        V + 'galeria/interior-2.jpg', V + 'galeria/interior-3.jpg', V + 'galeria/interior-4.jpg',
+        V + 'galeria/interior-1.jpg', V + 'galeria/interior-5.jpg', V + 'galeria/interior-6.jpg'
+      ]
+    },
+
+    reasons: [
+      { img:V + 'diferenciales/razon-1.jpg', logo:'assets/icons/brand/mantenimiento-planeado-blanco.png', title:'Mantenimiento Planeado Toyota',
+        list:['Mantenimiento realizado por técnicos calificados y certificados.',
+              'Uso de repuestos genuinos Toyota.',
+              'Tendrás un precio preferencial por cada tipo de mantenimiento durante 5 años o 70.000 km, lo primero que ocurra.'] },
+      { img:V + 'diferenciales/razon-5.jpg', title:'Desempeño / Motor',
+        text:'Motor 1.6L turbo con 296 HP y 400 Nm que ofrece una respuesta inmediata y controlada, desarrollado bajo filosofía motorsport para maximizar desempeño real en pista y carretera.' },
+      { img:V + 'diferenciales/razon-2.jpg', title:'Transmisión y 4WD',
+        text:'Transmisión manual con sistema iMT (rev matching) y tracción integral GR-FOUR, que distribuye el torque activamente para mejorar estabilidad, precisión y control en cualquier condición.' },
+      { img:V + 'diferenciales/razon-3.jpg', title:'Interior / Cabina',
+        text:'Cabina enfocada en el conductor, con ergonomía optimizada, volante GR deportivo y clúster TFT de 12,3” para una experiencia de manejo más intuitiva y orientada al desempeño.' },
+      { img:V + 'diferenciales/razon-4.jpg', title:'Tecnología y seguridad',
+        text:'Toyota Safety Sense 3.0, tecnología que incorpora avanzadas asistencias a la conducción como el sistema de pre-colisión, control crucero adaptativo, mantenimiento de carril y monitoreo de punto ciego que incrementan la confianza y el control durante cada trayecto.' }
+    ],
+
+    versions: [
+      { name:'GR Yaris MT', img:V + 'colores/blanco-perla-metalizado.webp', price:'$218.900.000',
+        // Datos de la ficha (antes en la landing de versión, que se eliminó):
+        // motor, potencia, torque, caja, tracción, puertas y pasajeros.
+        specs:[['engine','Motor','1.6L Turbo'],['power','Caballos de fuerza','296 HP'],
+               ['turbo','Torque','400 Nm'],['gear','Transmisión','Manual de 6 velocidades'],
+               ['awd','Drivetrain','4WD GR-FOUR'],['door','Puertas','2 puertas'],
+               ['seats','Pasajeros','Capacidad de 4 pasajeros'],
+               ['susp','Suspensión','MacPherson / Doble horquilla']] },  // ficha: la de la versión (fichaPdf) o la del modelo
+      // EJEMPLO: segunda versión para mostrar el carrusel ("1 de 2" y flechas).
+      // Cada versión trae su foto, precio, specs y, si aplica, su fichaPdf.
+      { name:'GR Yaris AT', img:V + 'colores/blanco-perla-metalizado.webp', price:'$218.900.000',
+        specs:[['engine','Motor','1.6L Turbo'],['power','Caballos de fuerza','296 HP'],
+               ['turbo','Torque','400 Nm'],['gear','Transmisión','Automática de 8 velocidades GR-DAT'],
+               ['awd','Drivetrain','4WD GR-FOUR'],['door','Puertas','2 puertas'],
+               ['seats','Pasajeros','Capacidad de 4 pasajeros'],
+               ['susp','Suspensión','MacPherson / Doble horquilla']] }
+    ],
+
+    docs: [
+      { ico:'doc',    name:'Ficha técnica',             href:'https://content.toyota.com.co/toyota-images/images/pdf/ft-gr-yaris-2027.pdf' },
+      { ico:'wheel',  name:'Manual del buen conductor', href:'https://content.toyota.com.co/toyota-images/images/pdf/manual-del-buen-conductor-toyota.pdf' },
+      { ico:'shield', logo:'assets/icons/brand/cobertura-t10.webp', name:'Cobertura extendida T10',   href:'https://content.toyota.com.co/toyota-images/images/pdf/cobertura-extendida-t-10.pdf' }
+    ],
+
+    // Sello de garantía: garantia-standard.svg (5 años) o, en híbridos,
+    // garantia-hibrido.webp (8 años / 160.000 km) con su propio texto.
+    warranty: {
+      seal:  'assets/icons/warranty/garantia-standard.svg',
+      title: '5 años de garantía o 120.000 km',
+      text:  'La garantía TOYOTA aplica únicamente para vehículos nuevos importados por Automotores Toyota Colombia S.A.S. (“ATC”), comercializados y facturados por los concesionarios de la red de ATC. La garantía tiene una cobertura de 5 años contados a partir de la fecha de entrega del vehículo al cliente o 120.000 km., lo primero que ocurra. Los primeros 3 años y/o los 100.000 km. iniciales corresponden a la garantía de fábrica, los siguientes 2 años y/o los 20.000 km. adicionales, corresponden a la garantía suplementaria ofrecida por ATC.'
+    },
+
+    // EJEMPLO: garantía del sistema híbrido. Si el modelo la trae, la sección
+    // muestra las dos garantías ("Beneficios de tener un Toyota").
+    warrantyHybrid: {
+      seal:  'assets/icons/warranty/garantia-hibrido.webp',
+      title: '8 años de garantía o 160.000 km',
+      text:  '*La Garantía Sistema Híbrido aplica únicamente para los vehículos que hayan cumplido con el total de los mantenimientos periódicos establecidos en el manual de propietario con revisión inicial a los 30 días o 1.000 km. de recorrido, lo primero que se cumpla y posteriormente con todos los mantenimientos periódicos establecidos cada 5.000 km. a partir de los 5.000 km. (5.000 km., 10.000 km., 15.000 km., etc.) y hayan realizado el reemplazo del filtro de aire de la batería Híbrida cada 10.000 km. La garantía Toyota Híbrida tiene una cobertura de 8 años o 160.000 Km.*(lo primero que ocurra).'
+    }
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
+  var ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+
+  /* ── Precio y enlaces repartidos por la página ── */
+  document.querySelectorAll('[data-model="price"]').forEach(function (el) { el.textContent = MODEL.price; });
+  var TEXT = { legal:MODEL.legal, year:MODEL.year, priceLegal:MODEL.priceLegal,
+               introTitle:MODEL.intro.title, introText:MODEL.intro.text,
+               warTitle:MODEL.warranty.title, warText:MODEL.warranty.text };
+  Object.keys(TEXT).forEach(function (k) {
+    document.querySelectorAll('[data-model="' + k + '"]').forEach(function (el) { el.textContent = TEXT[k]; });
+  });
+  if ($('gv-war-seal')) $('gv-war-seal').src = MODEL.warranty.seal;
+
+  /* Garantía del sistema híbrido (RAV4 PHEV GR-S, LC300 HEV GR-S…): si el
+     modelo trae MODEL.warrantyHybrid, la sección muestra los dos bloques.
+     Ejemplo con los dos bloques: interna-ejemplo-versiones-hibrido.html */
+  if (MODEL.warrantyHybrid) {
+    var H = MODEL.warrantyHybrid, war = $('garantia');
+    war.classList.add('is-hybrid');
+    // Sin título propio: como en toyota.com.co, la sección se llama así
+    war.querySelector('.gv-war-head .gr-eyebrow').style.display = 'none';
+    war.querySelector('.gv-war-title').textContent = 'Beneficios de tener un Toyota';
+    war.querySelectorAll('.gv-war-sub, .gv-war-hyb').forEach(function (el) { el.hidden = false; });
+    $('gv-war-seal-hyb').src = H.seal;
+    war.querySelector('[data-model="warHybTitle"]').textContent = H.title;
+    war.querySelector('[data-model="warHybText"]').textContent = H.text;
+    // Textos tal cual toyota.com.co (ficha Yaris HB HEV): cada card lleva su
+    // título y el texto completo de su garantía.
+    war.querySelector('.gv-war-copy:not(.gv-war-hyb) .gv-war-sub').textContent = MODEL.warranty.title;
+  }
+  document.querySelectorAll('[data-model-href]').forEach(function (el) {
+    var url = MODEL[el.getAttribute('data-model-href')];
+    if (url) el.setAttribute('href', url);
+  });
+
+  /* ── Guías de zonas del banner: abrir la página con ?guias ── */
+  if (/[?&]guias\b/.test(location.search)) document.documentElement.classList.add('gv-guides');
+
+  /* ── Sellos de seguridad del banner ──
+     Del SVG se muestra solo el ícono (la leyenda que trae dibujada se
+     recorta) y la leyenda va como texto desde MODEL.seals[].label. */
+  if ($('gv-seals')) $('gv-seals').innerHTML = MODEL.seals.map(function (x) {
+    return '<li class="gv-seal"><span class="gv-seal-ico"><img src="' + x.src + '" alt=""></span>' +
+           '<span class="gv-seal-txt">' + esc(x.label) + '</span></li>';
+  }).join('');
+
+  /* ══════════════════════════════════════════════════════════
+     2 · COLORES
+  ══════════════════════════════════════════════════════════ */
+  (function () {
+    var list = $('gv-swatches'), car = $('gv-stage-car'), name = $('gv-color-name');
+    if (!list || !car) return;
+    list.innerHTML = MODEL.colors.map(function (c, i) {
+      return '<li><button class="gv-swatch" type="button" style="--sw:url(' + c.swatch + ')" aria-pressed="' + (i === 0) + '" ' +
+             'aria-label="' + esc(c.name) + '" title="' + esc(c.name) + '" data-i="' + i + '"></button></li>';
+    }).join('');
+    // Precarga, para que el cambio de color no parpadee
+    var stage = car.closest('.gv-stage'), hint = $('gv-drag-hint');
+    var current = 0, frame = null;   // frame null = foto 3/4 fija
+
+    // Frame n (1…count) del color actual
+    function frameSrc(c, n) { return c.spin.path + n + '.webp'; }
+    function preloadSpin(c) {
+      if (!c.spin) return;
+      for (var n = 1; n <= c.spin.count; n++) { var im = new Image(); im.src = frameSrc(c, n); }
+    }
+    /* La imagen y su escala (--fit) cambian en el MISMO cuadro y solo cuando
+       la nueva imagen ya está decodificada: si la escala cambiaba antes de que
+       llegara la foto, el auto anterior se veía un instante a otro tamaño y
+       parecía saltar. */
+    var paintId = 0;
+    function paint(c) {
+      var src = (c.spin && frame) ? frameSrc(c, frame) : c.img, id = ++paintId;
+      var im = new Image(); im.src = src;
+      function apply() {
+        if (id !== paintId) return;   // ya se pidió otro color/ángulo
+        car.style.setProperty('--fit', c.fit || 1);
+        car.src = src;
+        car.alt = 'Toyota ' + MODEL.name + ' ' + c.name;
+      }
+      if (im.decode) im.decode().then(apply, apply); else if (im.complete) apply(); else im.onload = im.onerror = apply;
+    }
+
+    function pick(i, animate) {
+      var c = MODEL.colors[i]; current = i;
+      name.textContent = c.name;
+      list.querySelectorAll('.gv-swatch').forEach(function (b, j) { b.setAttribute('aria-pressed', String(j === i)); });
+      // El 360 solo se activa si el color lo trae
+      var spin = !!c.spin;
+      if (hint) hint.hidden = !spin;
+      stage.classList.toggle('is-spin', spin);
+      if (spin) { stage.tabIndex = 0; stage.setAttribute('aria-label', 'Vista 360: arrastra o usa las flechas para girar'); preloadSpin(c); }
+      else { stage.removeAttribute('tabindex'); stage.removeAttribute('aria-label'); frame = null; }
+      if (!animate || reduceMotion) { paint(c); return; }
+      car.classList.add('is-swapping');
+      setTimeout(function () { paint(c); car.classList.remove('is-swapping'); }, 260);
+    }
+
+    /* ── Arrastre 360 ──
+       Cada ~1/14 del ancho del visor avanza un frame. Se parte del frame
+       que se está viendo (la 3/4 la primera vez). */
+    function rotate(steps) {
+      var c = MODEL.colors[current];
+      if (!c.spin || !steps) return;
+      var base = frame || c.spin.start;
+      frame = ((base - 1 + steps) % c.spin.count + c.spin.count) % c.spin.count + 1;
+      paint(c);
+    }
+    var x0 = null, moved = 0;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!stage.classList.contains('is-spin')) return;
+      x0 = e.clientX; moved = 0;
+      stage.setPointerCapture(e.pointerId);
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (x0 === null) return;
+      var step = stage.clientWidth / 14;
+      var n = Math.trunc((e.clientX - x0) / step) - moved;
+      if (n) { rotate(-n); moved += n; }
+    });
+    ['pointerup', 'pointercancel'].forEach(function (t) {
+      stage.addEventListener(t, function () { x0 = null; });
+    });
+    stage.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') { rotate(1); e.preventDefault(); }
+      if (e.key === 'ArrowRight') { rotate(-1); e.preventDefault(); }
+    });
+
+    list.addEventListener('click', function (e) {
+      var b = e.target.closest('.gv-swatch');
+      if (b && b.getAttribute('aria-pressed') !== 'true') pick(+b.dataset.i, false)   /* sin animación: el color cambia directo */;
+    });
+    pick(0, false);
+  }());
+
+  /* ══════════════════════════════════════════════════════════
+     3 · GALERÍA — pestañas + lightbox (el del Home, pero sobre la
+     pestaña visible y saltando los huecos sin foto)
+  ══════════════════════════════════════════════════════════ */
+  function galItems(arr, label) {
+    var extra = arr.length - 6;
+    // Cada foto es una ruta o { src, pos }: pos = punto focal del recorte
+    // (object-position), para que el auto no quede cortado en la reja.
+    return arr.map(function (g, i) {
+      var src = g.src || g, pos = g.pos ? ' style="object-position:' + g.pos + '"' : '';
+      return '<button class="gr-gal-item' + (i >= 6 ? ' is-extra' : '') + '" type="button" data-cap="' + label + '">' +
+             '<img src="' + src + '"' + pos + ' alt="' + esc(MODEL.name + ' · ' + label + ' ' + (i + 1)) + '" loading="lazy" decoding="async">' + '<span class="gv-ref">*Imágenes de referencia</span>' +
+             (i === 5 && extra > 0 ? '<span class="gv-gal-more"><span class="gv-more-d">+' + extra + '</span><span class="gv-more-m">+' + (extra + 2) + '</span></span>' : '') +
+             '</button>';
+    }).join('');
+  }
+  if ($('gv-gal-ext')) $('gv-gal-ext').innerHTML = galItems(MODEL.gallery.exterior, 'Exterior');
+  if ($('gv-gal-int')) $('gv-gal-int').innerHTML = galItems(MODEL.gallery.interior, 'Interior');
+
+  (function () {
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.gv-tab'));
+    function select(tab) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        var panel = $(t.getAttribute('aria-controls'));
+        panel.hidden = !on;
+        // Lo que estaba oculto no llegó a revelarse: se muestra ya
+        if (on) panel.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('is-in'); });
+      });
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { select(t); });
+      t.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        var n = tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+        select(n); n.focus();
+      });
+    });
+  }());
+
+  (function () {
+    var lb = $('gr-lb');
+    if (!lb) return;
+    var img = $('gr-lb-img'), label = $('gr-lb-label'), count = $('gr-lb-count');
+    var items = [], idx = 0, lastFocus = null;
+
+    function paint() {
+      var it = items[idx];
+      img.src = it.src; img.alt = it.alt; img.style.objectPosition = it.pos;
+      label.textContent = it.cap;
+      count.textContent = (idx + 1) + ' / ' + items.length;
+    }
+    function open(btn) {
+      var grid = btn.closest('.gr-gal-grid');
+      var btns = Array.prototype.slice.call(grid.querySelectorAll('button.gr-gal-item'));
+      items = btns.map(function (b) {
+        var i = b.querySelector('img');
+        return { src: i.getAttribute('src'), alt: i.getAttribute('alt') || '', cap: b.dataset.cap || '', pos: i.style.objectPosition || '' };
+      });
+      idx = btns.indexOf(btn); lastFocus = document.activeElement;
+      paint();
+      lb.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('gr-lb-open');
+      $('gr-lb-close').focus();
+    }
+    function close() {
+      lb.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('gr-lb-open');
+      if (lastFocus) lastFocus.focus();
+    }
+    function move(d) {
+      idx = (idx + d + items.length) % items.length;
+      if (reduceMotion) { paint(); return; }
+      img.style.opacity = '0';
+      setTimeout(function () { paint(); img.style.opacity = '1'; }, 130);
+    }
+    img.style.transition = 'opacity .2s ease';
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest('button.gr-gal-item');
+      if (b) open(b);
+    });
+    $('gr-lb-close').addEventListener('click', close);
+    $('gr-lb-prev').addEventListener('click', function () { move(-1); });
+    $('gr-lb-next').addEventListener('click', function () { move(1); });
+    lb.querySelectorAll('[data-lb-close]').forEach(function (el) { el.addEventListener('click', close); });
+    document.addEventListener('keydown', function (e) {
+      if (lb.getAttribute('aria-hidden') === 'true') return;
+      if (e.key === 'Escape') close();
+      if (e.key === 'ArrowLeft') move(-1);
+      if (e.key === 'ArrowRight') move(1);
+    });
+    var x0 = null;
+    lb.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend', function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 50) move(dx > 0 ? -1 : 1);
+      x0 = null;
+    }, { passive: true });
+  }());
+
+  /* ══════════════════════════════════════════════════════════
+     4 · DIFERENCIALES, VERSIONES, FICHA, DESCARGABLES
+  ══════════════════════════════════════════════════════════ */
+  // Sin .reveal en cada pieza: dentro de un carrusel, el translateY del
+  // reveal vuelve el contenedor desplazable a lo alto (ver nota del Home en
+  // .gr-timeline). El reveal lo lleva la lista entera.
+  if ($('gv-reasons')) $('gv-reasons').innerHTML = MODEL.reasons.map(function (r, i) {
+    var n = ('0' + (i + 1)).slice(-2), total = ('0' + MODEL.reasons.length).slice(-2);
+    var body = r.list
+      ? '<ul class="gv-reason-list">' + r.list.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>'
+      : '<p class="gv-reason-text">' + esc(r.text) + '</p>';
+    return '<li class="gv-reason">' +
+      '<div class="gv-reason-photo"><img src="' + r.img + '" alt="" loading="lazy" decoding="async">' + '<span class="gv-ref">*Imágenes de referencia</span>' + '</div>' +
+      '<div class="gv-reason-body">' +
+        '<span class="gv-reason-num">' + n + ' <span>/ ' + total + '</span></span>' +
+        '<h3 class="gv-reason-title">' + esc(r.title) + '</h3>' +
+        // Logo opcional del diferencial (p. ej. Mantenimiento Planeado Toyota)
+        (r.logo ? '<img class="gv-reason-logo" src="' + r.logo + '" alt="' + esc(r.title) + '" loading="lazy">' : '') + body +
+
+      '</div></li>';
+  }).join('');
+
+  if ($('gv-versions')) $('gv-versions').innerHTML = MODEL.versions.map(function (v) {
+    var specs = v.specs.map(function (x) {
+      return '<li><span class="gv-vspec-ico" aria-hidden="true">' + (ICON[x[0]] || '') + '</span>' +
+             '<span class="gv-vspec-k">' + esc(x[1]) + '</span><span class="gv-vspec-v">' + esc(x[2]) + '</span></li>';
+    }).join('');
+    return '<li class="gv-version"><div class="gv-version-body">' +
+      '<div class="gv-version-photo"><img src="' + v.img + '" alt="Toyota ' + esc(v.name) + '" loading="lazy" decoding="async"></div>' +
+      '<div class="gv-version-info">' +
+        '<h3 class="gv-version-name">' + esc(v.name) + '</h3>' +
+        '<ul class="gv-vspecs">' + specs + '</ul>' +
+        '<div class="gv-version-price"><span class="gv-price-label">Precio sugerido*</span><span class="gv-price">' + esc(v.price) + '</span><span class="gv-year gv-version-year"><span>Modelo ' + esc(MODEL.year) + '</span></span></div>' +
+        '<div class="gv-version-ctas">' +
+          '<a class="gr-btn gr-btn--red" href="' + MODEL.cotizar + '"><span>Cotizar ' + ARROW + '</span></a>' +
+          '<a class="gr-btn gr-btn--line" href="' + (v.fichaPdf || MODEL.fichaPdf) + '" target="_blank" rel="noopener"><span>Descargar ficha técnica</span></a>' +
+        '</div>' +
+      '</div></div></li>';
+  }).join('');
+
+  if ($('gv-docs')) $('gv-docs').innerHTML = MODEL.docs.map(function (d, i) {
+    return '<li><a class="gv-doc" href="' + d.href + '"' + (/\.pdf$/i.test(d.href) ? ' target="_blank" rel="noopener"' : '') + '>' +
+      '<span class="gv-doc-top">' + (d.logo
+        // Logo propio (p. ej. T10): va a color, en lugar de la caja del ícono
+        ? '<img class="gv-doc-logo" src="' + d.logo + '" alt="" aria-hidden="true">'
+        : '<span class="gv-doc-ico" aria-hidden="true">' + (ICON[d.ico] || '') + '</span>') +
+      '<span class="gv-doc-type">' + (/\.pdf$/i.test(d.href) ? 'PDF' : '') + '</span></span>' +
+      '<span class="gv-doc-name">' + esc(d.name) + '</span>' +
+      '<span class="gv-doc-go">' + (/\.pdf$/i.test(d.href) ? 'Descargar ' : 'Ver ') + ICON.download + '</span></a></li>';
+  }).join('');
+
+  /* Ancho de Cotizar = del inicio de la 2ª columna al final del texto más
+     largo de esa columna (Velocidades, Pasajeros…). */
+  function fitCotizar() {
+    document.querySelectorAll('.gv-version').forEach(function (card) {
+      var btn = card.querySelector('.gv-version-ctas .gr-btn--line');
+      var items = card.querySelectorAll('.gv-vspecs li:nth-child(even)');
+      if (!btn || !items.length) return;
+      var info = card.querySelector('.gv-version-info');
+      info.style.removeProperty('--cot-w');
+      var start = btn.getBoundingClientRect().left, end = 0;
+      items.forEach(function (li) {
+        li.querySelectorAll('.gv-vspec-k,.gv-vspec-v').forEach(function (t) {
+          var r = document.createRange(); r.selectNodeContents(t);
+          end = Math.max(end, r.getBoundingClientRect().right);
+        });
+      });
+      // En una sola columna (móvil) no aplica: queda a todo el ancho
+      if (getComputedStyle(card.querySelector('.gv-vspecs')).gridTemplateColumns.split(' ').length < 2) return;
+      // En el contenedor: lo usan Cotizar y el precio (termina en el mismo borde)
+      if (end > start) info.style.setProperty('--cot-w', Math.round(end - start) + 'px');
+    });
+  }
+  fitCotizar();
+  window.addEventListener('resize', fitCotizar);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitCotizar);
+
+  /* Descargables (móvil): marca la card que quedó a la vista en el slider */
+  (function () {
+    var list = $('gv-docs');
+    if (!list) return;
+    var ticking = false;
+    function mark() {
+      ticking = false;
+      var items = Array.prototype.slice.call(list.children), x = list.getBoundingClientRect().left;
+      var best = 0, dist = Infinity;
+      items.forEach(function (li, i) {
+        var d = Math.abs(li.getBoundingClientRect().left - x - parseFloat(getComputedStyle(list).paddingLeft));
+        if (d < dist) { dist = d; best = i; }
+      });
+      items.forEach(function (li, i) { li.classList.toggle('is-active', i === best); });
+    }
+    list.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(mark); } }, { passive: true });
+    window.addEventListener('resize', mark);
+    mark();
+  }());
+
+  /* Precio del banner al ancho exacto del legal de abajo */
+  function fitBannerPrice() {
+    var price = document.querySelector('.gv-buy .gv-price'), legal = document.querySelector('.gv-buy .gv-buy-legal');
+    if (!price || !legal) return;
+    price.style.fontSize = '';
+    var target = legal.getBoundingClientRect().width;
+    var r = document.createRange(); r.selectNodeContents(price);
+    var now = r.getBoundingClientRect().width;
+    if (!target || !now) return;
+    var fs = parseFloat(getComputedStyle(price).fontSize);
+    price.style.fontSize = (fs * target / now) + 'px';
+    // segunda pasada: el tracking no escala lineal
+    now = r.getBoundingClientRect().width;
+    if (now) price.style.fontSize = (parseFloat(price.style.fontSize) * target / now) + 'px';
+  }
+  fitBannerPrice();
+  window.addEventListener('resize', fitBannerPrice);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitBannerPrice);
+
+  /* Carrusel — la misma función del Home */
+  function grCarousel(trackId, prevId, nextId, countId) {
+    var track = $(trackId), prev = $(prevId), next = $(nextId), count = $(countId);
+    if (!track || !prev || !next) return;
+    function step() {
+      var first = track.children[0];
+      if (!first) return 0;
+      var gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      return first.getBoundingClientRect().width + gap;
+    }
+    function sync() {
+      if (!track.clientWidth) return;
+      var total = track.children.length, s = step();
+      var idx = s ? Math.round(track.scrollLeft / s) : 0;
+      if (count) count.textContent = Math.min(idx + 1, total) + ' de ' + total;
+      prev.disabled = track.scrollLeft <= 1;
+      next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 1;
+    }
+    function nudge(dir) {
+      track.scrollLeft += dir * step();
+      setTimeout(sync, 60);
+      setTimeout(sync, 450);
+    }
+    prev.addEventListener('click', function () { nudge(-1); });
+    next.addEventListener('click', function () { nudge(1); });
+    window.addEventListener('resize', sync);
+    var t;
+    track.addEventListener('scroll', function () { clearTimeout(t); t = setTimeout(sync, 120); }, { passive: true });
+    sync();
+  }
+  // Versiones: carrusel solo si hay más de una
+  if ($('gv-versions') && MODEL.versions && MODEL.versions.length > 1) {
+    $('gv-versions').classList.add('is-carousel');
+    $('gv-vs-nav').hidden = false;
+    grCarousel('gv-versions', 'gv-vs-prev', 'gv-vs-next', 'gv-vs-count');
+  }
+  grCarousel('gv-reasons',  'gv-rs-prev',  'gv-rs-next',  'gv-rs-count');
+
+  /* ══════════════════════════════════════════════════════════
+     6 · SUB-NAV — scrollspy + barra de compra móvil
+  ══════════════════════════════════════════════════════════ */
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('#gv-subnav-links a'));
+    var bar = $('gv-subnav-links');
+    var map = {};
+    links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+    var current = null;
+    function activate(id) {
+      if (id === current || !map[id]) return;
+      current = id;
+      links.forEach(function (a) { a.classList.toggle('is-active', a === map[id]); });
+      // En móvil la barra scrollea: se lleva el enlace activo a la vista
+      var a = map[id];
+      if (bar.scrollWidth > bar.clientWidth) {
+        bar.scrollTo({ left: a.offsetLeft - bar.clientWidth / 2 + a.offsetWidth / 2, behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
+    }
+    // Activa la última sección cuyo borde superior ya pasó la mitad de la
+    // ventana. Por posición y no con IntersectionObserver: así, pasada la
+    // última sección (otros modelos, footer) queda marcada Garantía en vez
+    // de quedarse con la que hubiera antes.
+    var sections = Object.keys(map).map(function (id) { return $(id); }).filter(Boolean);
+    var ticking = false;
+    function spy() {
+      ticking = false;
+      if (!sections.length) return;   // página sin sub-nav (p. ej. la galería)
+      var mid = window.innerHeight * 0.5, id = sections[0].id;
+      sections.forEach(function (s) { if (s.getBoundingClientRect().top <= mid) id = s.id; });
+      activate(id);
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(spy); }
+    }, { passive: true });
+    window.addEventListener('resize', spy);
+    spy();
+
+    var subnav = document.querySelector('.gv-subnav'), hero = $('resumen');
+    function toggleSubnav() {
+      if (subnav && hero) subnav.classList.toggle('is-on', hero.getBoundingClientRect().bottom < hero.offsetHeight * .4);
+    }
+    window.addEventListener('scroll', toggleSubnav, { passive: true });
+    toggleSubnav();
+
+    var buybar = $('gv-buybar');
+    if (buybar && hero && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        buybar.classList.toggle('is-on', !entries[0].isIntersecting);
+      }, { threshold: 0, rootMargin: '0px 0px -40% 0px' }).observe(hero);
+    }
+  }());
+
+  /* ══════════════════════════════════════════════════════════
+     7 · HEADER — mega-menú, panel móvil, acordeón del footer
+     (copiados del Home sin cambios)
+  ══════════════════════════════════════════════════════════ */
+  (function () {
+    var btn = $('t-mega-btn'), mega = $('t-mega');
+    if (!btn || !mega) return;
+    function setOpen(open) { mega.classList.toggle('is-open', open); btn.setAttribute('aria-expanded', String(open)); }
+    function isOpen() { return btn.getAttribute('aria-expanded') === 'true'; }
+    btn.addEventListener('click', function (e) { e.stopPropagation(); setOpen(!isOpen()); });
+    mega.addEventListener('click', function (e) { if (e.target.closest('a')) setOpen(false); else e.stopPropagation(); });
+    document.addEventListener('click', function () { if (isOpen()) setOpen(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) { setOpen(false); btn.focus(); } });
+
+    var sub = $('t-msub'), subList = $('t-msub-list'), subOpen = $('t-msub-open'), subBack = $('t-msub-back'), subX = $('t-msub-close');
+    var grid = mega.querySelector('.t-mega-grid');
+    if (!sub || !subList || !subOpen || !grid) return;
+    subList.innerHTML = grid.innerHTML;
+    function setSub(open) {
+      sub.classList.toggle('is-open', open);
+      sub.setAttribute('aria-hidden', String(!open));
+      subOpen.setAttribute('aria-expanded', String(open));
+      if (open) sub.scrollTop = 0;
+    }
+    function closeAll() { setSub(false); var c = $('t-mobile-close'); if (c) c.click(); }
+    subOpen.addEventListener('click', function () { setSub(true); });
+    if (subBack) subBack.addEventListener('click', function () { setSub(false); });
+    if (subX) subX.addEventListener('click', closeAll);
+    subList.addEventListener('click', function (e) { if (e.target.closest('a')) closeAll(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sub.classList.contains('is-open')) setSub(false); });
+  }());
+
+  (function () {
+    var panel = $('t-mobile'), burger = $('t-burger'), closeBtn = $('t-mobile-close');
+    if (!panel || !burger) return;
+    function openPanel() { panel.classList.add('is-open'); panel.setAttribute('aria-hidden', 'false'); burger.setAttribute('aria-expanded', 'true'); document.body.style.overflow = 'hidden'; }
+    function closePanel() { panel.classList.remove('is-open'); panel.setAttribute('aria-hidden', 'true'); burger.setAttribute('aria-expanded', 'false'); document.body.style.overflow = ''; }
+    burger.addEventListener('click', openPanel);
+    if (closeBtn) closeBtn.addEventListener('click', closePanel);
+    panel.addEventListener('click', function (e) { if (e.target.closest('a')) closePanel(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && panel.classList.contains('is-open')) closePanel(); });
+  }());
+
+  document.querySelectorAll('.t-footer-acc-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btn.setAttribute('aria-expanded', String(btn.getAttribute('aria-expanded') !== 'true'));
+    });
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     8 · REVEAL al hacer scroll (va al final: lo pintado por JS
+     también tiene que quedar observado)
+  ══════════════════════════════════════════════════════════ */
+  (function () {
+    var els = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+    if (!els.length) return;
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      els.forEach(function (el) { el.classList.add('is-in'); });
+      return;
+    }
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        en.target.classList.add('is-in');
+        obs.unobserve(en.target);
+      });
+    }, { rootMargin: '0px 0px -12% 0px', threshold: .1 });
+    els.forEach(function (el) { obs.observe(el); });
+  }());
+
+}());
+</script>
+
+</body>
+</html>

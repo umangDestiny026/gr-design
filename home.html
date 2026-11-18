@@ -1,0 +1,4129 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GAZOO Racing | Toyota Colombia</title>
+  <meta name="description"
+    content="GAZOO Racing: el equipo de automovilismo y los vehículos ganadores de las competencias más retadoras del mundo. Conoce la gama GR y GR SPORT en Colombia.">
+  <link rel="icon" href="https://content.toyota.com.co/favicon-toyota.svg">
+
+  <style>
+    /* ══════════════════════════════════════════════════════════════
+   TIPOGRAFÍAS OFICIALES
+   Toyota Type  → chrome del sitio (header, footer)
+   DecimaMonoPro → tipografía de GAZOO Racing. UN SOLO PESO (400):
+   por eso font-synthesis se apaga dentro de .gr — si no, el
+   navegador fabrica negritas engordando los trazos y los deforma.
+
+   Los .ttf viven en assets/fonts/ (descargados del CDN de Toyota).
+   Para producción conviene servirlos en .woff2 (pesan ~40% menos):
+   basta con agregar la línea del woff2 ANTES de la del ttf.
+══════════════════════════════════════════════════════════════ */
+    @font-face {
+      font-family: 'ToyotaType';
+      src: url('assets/fonts/toyota-type-light.ttf') format('truetype');
+      font-weight: 300;
+      font-style: normal;
+      font-display: swap
+    }
+
+    @font-face {
+      font-family: 'ToyotaType';
+      src: url('assets/fonts/toyota-type-book.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap
+    }
+
+    @font-face {
+      font-family: 'ToyotaType';
+      src: url('assets/fonts/toyota-type-semibold.ttf') format('truetype');
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap
+    }
+
+    @font-face {
+      font-family: 'ToyotaType';
+      src: url('assets/fonts/toyota-type-bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap
+    }
+
+    @font-face {
+      font-family: 'DecimaMonoPro';
+      src: url('assets/fonts/decima-mono-pro.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap
+    }
+
+    @font-face {
+      font-family: 'DecimaMonoProLT';
+      src: url('assets/fonts/decima-mono-pro-lt.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      /* ── Paleta GR (manual GR Brand Migration Ver.7) ──
+     GR RED #FF0000 es el rojo de marca, pero con texto blanco encima
+     solo da 4.0:1 → no pasa AA en texto normal. Por eso hay dos rojos:
+       --gr-red     → elementos GRÁFICOS (chips, cuadraditos, filetes)
+       --gr-red-ui  → superficies con TEXTO encima (5.1:1 sobre blanco)
+     Ojo: el rojo GR NO es el rojo Toyota (#EB0A1E). Son marcas distintas
+     desde que GR dejó de llevar el prefijo "Toyota". */
+      --gr-red: #FF0000;
+      --gr-red-ui: #DF001A;
+      --gr-red-dark: #A4091B;
+      --gr-gray: #9FA0A0;
+      --gr-black: #000000;
+      --toyota-red: #EB0A1E;
+
+      --ink: #16161a;
+      --ink-soft: #5b5b62;
+      --line: #e5e8ea;
+
+      /* ── Layout · grid de 12 columnas ──
+     Artboard 1920 · margen 40 · gutter 20 → columna de 135 px justos:
+       (1920 − 2·40 − 11·20) / 12 = 135
+     --wrap es el ancho EXTERIOR del contenedor: con box-sizing:border-box
+     se lleva adentro los dos márgenes de 40, así que el ancho útil son
+     1840. Encima de 1920 el contenido no crece, solo sobra margen. */
+      --wrap: 1920px;
+      --pad-x: 40px;
+      --gutter: 20px;
+      /* Ancho de una columna, en píxeles reales. Se calcula con 100vw (igual
+     que en el grid móvil) para poder usarlo a cualquier profundidad del
+     DOM: con un porcentaje, el 100% se resolvería contra el contenedor
+     de turno y adentro de una card daría cualquier cosa. */
+      --col: calc((min(100vw, 1920px) - 2 * 40px - 11 * 20px) / 12);
+      --sec-y: clamp(36px, 3.8vw, 68px);
+      --header-h: 64px;
+      --subnav-h: 0px;
+      /* la sub-nav GR se eliminó; queda en 0 por si vuelve una barra propia */
+
+      --ease: cubic-bezier(.22, .61, .36, 1);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   GRID MÓVIL — 4 columnas · margen 15 · gutter 20
+   A 390 px: columna = 75, y las columnas caen en
+     col1 15→90 · col2 110→185 · col3 205→280 · col4 300→375
+   --pad-x pasa a 15 px, así TODO lo que vive dentro de .wrap
+   (títulos, bajadas, botones, bandas) arranca sobre col1 y termina
+   sobre col4 sin cálculos extra.
+   --col se calcula con 100vw porque en móvil no hay scrollbar que
+   descontar; dentro de un contenedor con padding un % no serviría.
+══════════════════════════════════════════════════════════════ */
+    @media (max-width:760px) {
+      :root {
+        --pad-x: 15px;
+        --gutter: 20px;
+        --col: calc((100vw - 2 * 15px - 3 * 20px) / 4);
+        /* Ancho de carrusel: las 4 columnas completas + los 3 gutters de adentro.
+       La card ocupa el ancho útil entero (360 px a 390): se ve UNA sola,
+       sin asomo. Se pasa con los botones de abajo. */
+        --card-4col: calc(4 * var(--col) + 3 * var(--gutter));
+      }
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%
+    }
+
+    body {
+      font-family: 'ToyotaType', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--ink);
+      background: #fff;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    img,
+    svg,
+    video {
+      display: block;
+      max-width: 100%
+    }
+
+    a {
+      color: inherit
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: 0;
+      cursor: pointer
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--gr-red-ui);
+      outline-offset: 3px;
+      border-radius: 4px
+    }
+
+    /* width:100% para que .wrap no se encoja cuando su padre es flex o grid:
+   como ítem, con margin-inline:auto se ajustaría al contenido y dejaría
+   de marcar los márgenes del grid. */
+    .wrap {
+      width: 100%;
+      max-width: var(--wrap);
+      margin-inline: auto;
+      padding-inline: var(--pad-x)
+    }
+
+    /* Bloques que van de la columna 2 a la 11 (10 columnas), igual que el panel
+   de Síguenos. El max-width incluye los dos --pad-x porque hay
+   box-sizing:border-box, así que el CONTENIDO son las 10 columnas justas.
+   En móvil se desactiva solo: con la columna del grid de 4 el cálculo da más
+   que el viewport, no llega a limitar, y manda el width:100%. */
+    .wrap.is-10col {
+      max-width: calc(10 * var(--col) + 9 * var(--gutter) + 2 * var(--pad-x))
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0
+    }
+
+    /* Salto de sección: compensa header + subnav sticky al anclar */
+    [id] {
+      scroll-margin-top: calc(var(--header-h) + var(--subnav-h) + 12px)
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   HEADER GR — barra propia, ya no la réplica de toyota.com.co
+   Negra y translúcida con desenfoque: sobre el hero se funde con
+   el GIF y sobre las secciones blancas (galería, Síguenos) se lee
+   como una barra oscura deliberada. El desenfoque obliga a un
+   fondo semitransparente, así que hay @supports de respaldo.
+   Tipografía: DecimaMonoPro en versalitas, como el resto de GR.
+══════════════════════════════════════════════════════════════ */
+    .t-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(10, 10, 12, .72);
+      -webkit-backdrop-filter: blur(16px) saturate(130%);
+      backdrop-filter: blur(16px) saturate(130%);
+      border-bottom: 1px solid rgba(255, 255, 255, .14);
+      color: #fff;
+    }
+
+    @supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))) {
+      .t-header {
+        background: #0b0b0d
+      }
+    }
+
+    .t-header a {
+      text-decoration: none;
+      color: inherit
+    }
+
+    .t-header-inner {
+      max-width: var(--wrap);
+      margin-inline: auto;
+      padding-inline: var(--pad-x);
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: clamp(14px, 2vw, 40px);
+    }
+
+    .t-logo {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0
+    }
+
+    .t-logo img {
+      height: clamp(17px, 1.4vw, 23px);
+      width: auto;
+      display: block
+    }
+
+    .t-nav {
+      display: flex;
+      align-items: center;
+      gap: clamp(16px, 2.1vw, 38px)
+    }
+
+    .t-nav-link {
+      position: relative;
+      font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-synthesis: none;
+      font-size: clamp(10.5px, .82vw, 13px);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: rgba(255, 255, 255, .72);
+      padding-block: 7px;
+      transition: color .2s;
+    }
+
+    .t-nav-link:hover {
+      color: #fff
+    }
+
+    .t-nav-link.is-current {
+      color: #fff
+    }
+
+    /* Subrayado en el paralelogramo GR, el mismo sesgo de los botones */
+    .t-nav-link::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: var(--gr-red);
+      transform: skewX(-14deg) scaleX(0);
+      transform-origin: left center;
+      transition: transform .28s var(--ease);
+    }
+
+    .t-nav-link:hover::after,
+    .t-nav-link.is-current::after {
+      transform: skewX(-14deg) scaleX(1)
+    }
+
+    /* Galón rojo en Garaje GR y Alquila, las mismas dos que lo llevan en
+   gazooracing.com.co. Va en su propio <i> y no en un ::after porque ese
+   pseudo ya lo ocupa el subrayado sesgado de hover/activo. */
+    .t-nav-caret {
+      display: inline-block;
+      vertical-align: middle;
+      width: 5px;
+      height: 5px;
+      margin-left: 9px;
+      border-right: 2px solid var(--gr-red);
+      border-bottom: 2px solid var(--gr-red);
+      transform: translateY(-2px) rotate(45deg);
+      transition: transform .28s var(--ease);
+    }
+
+    /* Garaje GR abre el mega-menú, así que es un <button> y no un enlace: el
+   texto y el galón son un solo disparador. Comparte .t-nav-link con el resto
+   de la nav para que se vea igual. */
+    .t-nav-link[aria-expanded="true"] .t-nav-caret {
+      transform: translateY(1px) rotate(225deg)
+    }
+
+    /* ── Mega-menú de Garaje GR ──
+   Cuelga del header sticky, así que va absoluto respecto de él y se
+   superpone al contenido en vez de empujarlo. Blanco y opaco: las fotos del
+   catálogo vienen sobre blanco, así que se funden con el panel en vez de
+   quedar como recuadros recortados. */
+    .t-mega {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      color: var(--ink);
+      border-bottom: 1px solid var(--line);
+      padding-block: clamp(26px, 2.6vw, 44px) clamp(30px, 3vw, 52px);
+      /* Con los siete modelos el panel mide más que la ventana en todos los
+     tamaños (1151 px a 1920×1080), así que se recorta al hueco que deja el
+     header y scrollea por dentro; sin esto la última card quedaba cortada y
+     fuera de alcance. dvh va segundo por el navegador móvil. */
+      max-height: calc(100vh - var(--header-h));
+      max-height: calc(100dvh - var(--header-h));
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: opacity .26s var(--ease), transform .26s var(--ease), visibility .26s;
+    }
+
+    .t-mega.is-open {
+      opacity: 1;
+      visibility: visible;
+      transform: none
+    }
+
+    .t-mega-tab {
+      margin-bottom: clamp(24px, 2.4vw, 40px);
+      padding-bottom: 12px;
+      text-align: center;
+      font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-synthesis: none;
+      font-size: 13px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    /* Subrayado corto y centrado bajo la pestaña, con el sesgo GR */
+    .t-mega-tab::after {
+      content: '';
+      display: block;
+      width: 132px;
+      height: 2px;
+      margin: 12px auto 0;
+      background: var(--gr-red);
+      transform: skewX(-14deg);
+    }
+
+    .t-mega-grid {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(38px, 4.2vw, 74px) clamp(36px, 4.6vw, 88px);
+    }
+
+    .t-mega-card {
+      display: flex;
+      flex-direction: column
+    }
+
+    .t-mega-name {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      /* Tipografía GR (DecimaMonoPro, un solo peso: sin negrita sintética) */
+      font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-synthesis: none;
+      font-size: clamp(15px, 1.15vw, 19px);
+      font-weight: 400;
+      letter-spacing: .04em;
+      color: var(--ink);
+    }
+
+    /* Mismo paralelogramo que los botones GR: skewX en la caja y contra-skew en
+   el hijo, para que el texto no salga inclinado. */
+    .t-mega-tag {
+      flex-shrink: 0;
+      padding: 5px 13px;
+      border-radius: 5px;
+      background: var(--gr-red-ui);
+      transform: skewX(-14deg);
+      font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-synthesis: none;
+      font-size: 10.5px;
+      font-weight: 400;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .t-mega-tag>span {
+      display: inline-block;
+      transform: skewX(14deg)
+    }
+
+    /* Las fotos del catálogo vienen sobre blanco (solo Yaris y RAV4 son
+   transparentes), así que sobre el panel blanco se funden sin necesidad de
+   tarjeta. El tope de alto sí hace falta: sin él, a 1920 la foto crece con la
+   columna y el panel se va a ~940 px, casi la ventana entera. */
+    .t-mega-shot {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 290/133;
+      object-fit: contain;
+      margin: clamp(14px, 1.4vw, 24px) 0;
+      max-height: clamp(110px, 10vw, 180px);
+    }
+
+    /* Los dos enlaces a los extremos, cada uno con su propio subrayado. Sin regla
+   al pie de la card: sumada a esos subrayados quedaban dos líneas seguidas. */
+    .t-mega-links {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-top: auto;
+      font-size: clamp(13px, 1vw, 15px);
+    }
+
+    .t-mega-links a {
+      color: var(--ink);
+      text-decoration: underline;
+      text-underline-offset: 5px;
+      text-decoration-color: rgba(10, 10, 15, .3);
+      transition: color .2s, text-decoration-color .2s;
+    }
+
+    .t-mega-links a:hover {
+      color: var(--gr-red-ui);
+      text-decoration-color: var(--gr-red-ui)
+    }
+
+    .t-wa {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .1);
+      transition: background .22s, transform .22s var(--ease);
+    }
+
+    .t-wa:hover {
+      background: var(--gr-red-ui);
+      transform: translateY(-2px)
+    }
+
+    /* El SVG de WhatsApp viene en oscuro: el filtro lo aplana a blanco. */
+    .t-wa img {
+      width: 17px;
+      height: 17px;
+      filter: brightness(0) invert(1)
+    }
+
+    .t-burger {
+      display: none;
+      color: #fff;
+      padding: 6px;
+      margin-right: -6px
+    }
+
+    .t-burger svg {
+      display: block;
+      width: 24px;
+      height: 24px
+    }
+
+    .t-mobile {
+      display: none
+    }
+
+    /* Con los seis enlaces + logo + WhatsApp el header entra hasta ~900, pero ahí
+   quedan 25 px entre el logo y el primer enlace y se ve apretado. A 1024 aún
+   sobran ~130. Por debajo, panel. */
+    @media (max-width:1024px) {
+      .t-nav {
+        display: none
+      }
+
+      .t-burger {
+        display: block
+      }
+
+      .t-mobile {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: #0b0b0d;
+        color: #fff;
+        transform: translateX(100%);
+        transition: transform .32s var(--ease);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .t-mobile.is-open {
+        transform: translateX(0)
+      }
+
+      /* El panel es hermano de <header>, no hijo: no le llega el
+     .t-header a{text-decoration:none} y los enlaces salían subrayados. */
+      .t-mobile a {
+        text-decoration: none;
+        color: inherit
+      }
+
+      .t-mobile-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: var(--header-h);
+        padding-inline: var(--pad-x);
+        border-bottom: 1px solid rgba(255, 255, 255, .14);
+      }
+
+      .t-mobile-head img {
+        height: 20px;
+        width: auto
+      }
+
+      .t-mobile-close {
+        font-size: 26px;
+        line-height: 1;
+        padding: 4px 6px;
+        color: #fff
+      }
+
+      /* DecimaMonoPro en versalitas, como la nav del desktop y el resto de GR.
+     font-synthesis:none es obligatorio: el panel vive FUERA de .gr, que es
+     donde está la regla global, y Decima trae un solo peso — sin esto el
+     navegador falsearía negritas y ensuciaría el trazo. */
+      .t-mobile {
+        font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-synthesis: none;
+      }
+
+      /* ⚠️ width:100% y text-align:left porque "Garaje GR" es un <button>: sin
+     eso se encoge al ancho de su texto, el galón se pega a la palabra y el
+     filete de la fila se queda a medias. */
+      .t-mobile-flat {
+        position: relative;
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 19px var(--pad-x);
+        border-bottom: 1px solid rgba(255, 255, 255, .1);
+        font-size: 18px;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, .82);
+        transition: color .2s, background .2s;
+      }
+
+      /* Marca de página actual: barra roja en el canal izquierdo. Va absoluta
+     para no correr el texto respecto de las demás filas. */
+      .t-mobile-flat.is-current {
+        color: #fff
+      }
+
+      .t-mobile-flat.is-current::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 14px;
+        bottom: 14px;
+        width: 3px;
+        background: var(--gr-red);
+      }
+
+      .t-mobile-flat:hover,
+      .t-mobile-flat:active {
+        color: #fff;
+        background: rgba(255, 255, 255, .04)
+      }
+
+      /* Galón rojo solo en las filas que lo llevan en gazooracing.com.co: allá son
+     las que abren submenú (Garaje GR y Alquila); las otras dos van limpias. */
+      .t-mobile-flat--sub {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px
+      }
+
+      .t-mobile-flat--sub::after {
+        content: '';
+        flex-shrink: 0;
+        width: 7px;
+        height: 7px;
+        border-top: 2px solid var(--gr-red);
+        border-right: 2px solid var(--gr-red);
+        transform: rotate(45deg);
+      }
+
+      /* Cotizador, Concesionarios y WhatsApp cierran como grupo aparte: sin
+     filetes entre ellos y con aire arriba. Son utilidades, no secciones de la
+     página. La jerarquía la hacen el tamaño y el tracking, NO una negrita:
+     Decima trae un peso y engordarlo sería sintético. */
+      .t-mobile-util {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 28px var(--pad-x) 36px;
+      }
+
+      .t-mobile-util a {
+        font-size: 18px;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: #fff
+      }
+
+      .t-mobile-wa {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .1);
+        transition: background .22s, transform .22s var(--ease);
+      }
+
+      .t-mobile-wa:hover {
+        background: var(--gr-red-ui);
+        transform: translateY(-2px)
+      }
+
+      .t-mobile-wa img {
+        width: 19px;
+        height: 19px;
+        filter: brightness(0) invert(1)
+      }
+
+      /* ── Sub-panel de Garaje GR ──
+     Entra deslizando desde la derecha sobre el panel, igual que en
+     gazooracing.com.co. Blanco como el mega-menú del desktop: las fotos del
+     catálogo vienen sobre blanco y así se funden con el fondo.
+     ⚠️ position:fixed y no absolute: .t-mobile scrollea, y con absolute el
+     sub-panel se posicionaría contra el alto del contenido y se iría con el
+     scroll. Como .t-mobile lleva transform, el fixed se ancla a su caja —que
+     es justo lo que se quiere— y no al viewport. */
+      .t-msub {
+        position: fixed;
+        inset: 0;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        color: var(--ink);
+        /* Vuelve a Toyota Type: el panel padre impone DecimaMonoPro y los nombres
+       de los modelos, que son negrita, se quedaban en el mono de un solo peso. */
+        font-family: 'ToyotaType', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        transform: translateX(100%);
+        transition: transform .3s var(--ease);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .t-msub.is-open {
+        transform: translateX(0)
+      }
+
+      /* Más alta que el header de la página: acá los tres controles son el único
+     contenido de la barra y con 64 px quedaban apretados. */
+      .t-msub-head {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 82px;
+        padding-inline: var(--pad-x);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .t-msub-back {
+        color: var(--ink);
+        padding: 6px;
+        margin-left: -6px;
+        line-height: 0
+      }
+
+      .t-msub-back svg {
+        width: 22px;
+        height: 22px;
+        display: block
+      }
+
+      .t-msub-title {
+        flex: 1 1 auto;
+        text-align: center;
+        font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-synthesis: none;
+        font-size: 14px;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+      }
+
+      .t-msub-close {
+        font-size: 24px;
+        line-height: 1;
+        padding: 4px 6px;
+        color: var(--ink)
+      }
+
+      .t-msub-tab {
+        padding: 20px var(--pad-x) 0;
+        font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-synthesis: none;
+        font-size: 12px;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        color: rgba(10, 10, 15, .55);
+      }
+
+      .t-msub-list {
+        list-style: none;
+        padding: 0 var(--pad-x) 40px
+      }
+
+      /* Las tarjetas son las mismas del mega-menú (el JS las clona), así que
+     heredan .t-mega-*; acá solo se apilan y se separan con filete. */
+      .t-msub-list .t-mega-card {
+        padding: 24px 0;
+        border-bottom: 1px solid var(--line)
+      }
+
+      .t-msub-list .t-mega-card:last-child {
+        border-bottom: 0
+      }
+
+      .t-msub-list .t-mega-shot {
+        max-height: none;
+        margin: 18px 0
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   ZONA GR — todo lo que va dentro de <main class="gr">
+   font-synthesis:none → DecimaMonoPro trae UN peso real; sin esto
+   el navegador falsea negritas engordando el trazo y lo ensucia.
+══════════════════════════════════════════════════════════════ */
+    .gr {
+      font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-synthesis: none;
+      background: #000;
+      color: #fff;
+    }
+
+    .gr *:not(svg):not(path):not(polygon) {
+      font-family: inherit
+    }
+
+    /* Ningún enlace de la zona GR va subrayado: los CTA son botones y el
+   subrayado del user-agent les ensuciaba la caja. */
+    .gr a {
+      text-decoration: none
+    }
+
+    /* Encabezado de sección compartido */
+    .gr-head {
+      margin-bottom: clamp(16px, 1.9vw, 34px)
+    }
+
+    /* "Conoce más" de Los inicios. En el DOM va al final de la sección, que es su
+   sitio en móvil: debajo de los botones del carrusel, centrado y a 3 columnas.
+   En desktop el grid del .wrap lo sube a la fila del encabezado, pegado al
+   borde derecho del contenido —el mismo borde de la última card. */
+    @media (min-width:761px) {
+      #historia>.wrap {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        column-gap: clamp(18px, 2.4vw, 56px);
+      }
+
+      #historia>.wrap>.gr-head {
+        grid-area: 1 / 1
+      }
+
+      #historia>.wrap>.gr-tl-more {
+        grid-area: 1 / 2;
+        justify-self: end;
+        align-self: end;
+        /* El mismo margen inferior que .gr-head, para que las dos cajas terminen
+       a la misma altura y el botón asiente sobre la línea base de la bajada. */
+        margin-bottom: clamp(16px, 1.9vw, 34px);
+      }
+
+      #historia>.wrap>.gr-timeline {
+        grid-area: 2 / 1 / 3 / 3
+      }
+
+      #historia>.wrap>.gr-tl-nav {
+        grid-area: 3 / 1 / 4 / 3
+      }
+    }
+
+    @media (max-width:760px) {
+
+      /* ⚠️ Doble clase a propósito: .gr-btn{display:inline-flex} está definido más
+     abajo en la hoja y con una sola clase le ganaba por orden. En inline-flex
+     los márgenes auto valen 0 y el botón no se centraba. */
+      .gr-btn.gr-tl-more {
+        display: flex;
+        justify-content: center;
+        width: calc(3 * var(--col) + 2 * var(--gutter));
+        margin: clamp(18px, 2.4vh, 30px) auto 0;
+      }
+    }
+
+    .gr-eyebrow {
+      display: inline-block;
+      font-size: clamp(11px, .85vw, 14px);
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      color: var(--gr-gray);
+      margin-bottom: clamp(10px, 1vw, 18px);
+    }
+
+    .gr-title {
+      font-size: clamp(22px, 2.8vw, 44px);
+      font-weight: 400;
+      letter-spacing: .14em;
+      line-height: 1.08;
+      text-transform: uppercase;
+      color: var(--gr-red);
+    }
+
+    .gr-lead {
+      margin-top: clamp(12px, 1.2vw, 22px);
+      font-size: clamp(14px, 1.15vw, 20px);
+      line-height: 1.5;
+      color: rgba(255, 255, 255, .72);
+      max-width: 92ch;
+    }
+
+    .gr-lead b {
+      font-weight: 400;
+      color: #fff
+    }
+
+    .gr-section {
+      padding: var(--sec-y) 0;
+      border-top: 1px solid rgba(255, 255, 255, .08)
+    }
+
+    /* ── Botón GR ──
+   El paralelogramo de los sitios de GR en USA y Japón: skewX en el
+   botón y contra-skew en el hijo. No se usa clip-path porque anula
+   el border-radius. */
+    .gr-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: clamp(14px, 1.1vw, 19px) clamp(26px, 2.2vw, 40px);
+      background: #fff;
+      color: #0a0a0a;
+      border-radius: 8px;
+      transform: skewX(-14deg);
+      font-size: clamp(11px, .92vw, 15px);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      transition: background .2s, transform .16s var(--ease), box-shadow .2s;
+    }
+
+    .gr-btn>span {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      transform: skewX(14deg)
+    }
+
+    .gr-btn svg {
+      width: 1.1em;
+      height: 1.1em;
+      flex-shrink: 0
+    }
+
+    .gr-btn:hover {
+      background: #e8e8e8;
+      transform: skewX(-14deg) translateY(-2px)
+    }
+
+    .gr-btn:active {
+      transform: skewX(-14deg) scale(.97)
+    }
+
+    .gr-btn--red {
+      background: var(--gr-red-ui);
+      color: #fff;
+      box-shadow: 0 10px 30px -12px rgba(223, 0, 26, .7)
+    }
+
+    .gr-btn--red:hover {
+      background: #f00a26
+    }
+
+    .gr-btn--ghost {
+      background: transparent;
+      color: #fff;
+      box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .5)
+    }
+
+    .gr-btn--ghost:hover {
+      background: rgba(255, 255, 255, .1)
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   HERO — media a sangre con el copy encima
+══════════════════════════════════════════════════════════════ */
+    .gr-hero {
+      position: relative;
+      /* Alto de viewport completo (menos el header sticky de Toyota), como el
+     hero de gazooracing.com. Se declara dos veces a propósito: vh cuenta la
+     barra del navegador móvil y deja el hero más alto que lo visible; dvh lo
+     corrige y pisa a la anterior donde exista. El clamp pone piso en pantallas
+     bajas y techo en monitores verticales, donde 100dvh se iría a 2000 px.
+     92dvh y no 100: deja asomar la sección siguiente (como el hero de GR) y,
+     sobre todo, evita escalar el GIF. Es 1920×630, así que a 100dvh habría
+     que agrandarlo 1,33× y se ablanda; a 92dvh el aumento es del 9%. */
+      min-height: clamp(460px, calc(92vh - var(--header-h)), 860px);
+      min-height: clamp(460px, calc(92dvh - var(--header-h)), 860px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+      /* El póster pinta al instante mientras baja el GIF (24 MB en desktop). */
+      background: #000 url("assets/video/hero-poster.jpg") center/cover no-repeat;
+      padding: clamp(48px, 5.5vw, 90px) var(--pad-x);
+    }
+
+    .gr-hero-media {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+
+    /* Scrim: sin él el texto blanco se pierde sobre los frames claros */
+    .gr-hero-scrim {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, .66) 0%, rgba(0, 0, 0, .18) 34%, rgba(0, 0, 0, .92) 100%),
+        radial-gradient(ellipse 68% 58% at 50% 48%, rgba(0, 0, 0, .5) 0%, transparent 72%);
+    }
+
+    .gr-hero-inner {
+      position: relative;
+      z-index: 2;
+      max-width: min(100%, 1000px)
+    }
+
+    /* El lockup reemplaza al wordmark tipográfico. Al quitar la sub-nav GR,
+   el hero pasa a ser el único lugar donde vive la marca, así que acá va
+   el logo completo y no el badge GR suelto. Vive dentro del <h1> para no
+   perder el encabezado de la página: el alt del <img> hace de texto. */
+    .gr-hero-logo {
+      width: min(100%, clamp(260px, 46vw, 640px));
+      height: auto;
+      margin: 0 auto;
+      filter: drop-shadow(0 8px 30px rgba(0, 0, 0, .6));
+    }
+
+    .gr-hero-sub {
+      margin: clamp(18px, 1.8vw, 34px) auto 0;
+      font-size: clamp(15px, 1.5vw, 27px);
+      line-height: 1.5;
+      color: rgba(255, 255, 255, .94);
+      max-width: 44ch;
+      text-wrap: balance;
+    }
+
+    .gr-hero-ctas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: clamp(12px, 1.2vw, 20px);
+      justify-content: center;
+      margin-top: clamp(26px, 2.6vw, 48px);
+    }
+
+    /* Indicador de scroll — invita a bajar, que es la acción que la
+   landing necesita en el primer pantallazo. */
+    .gr-hero-scroll {
+      position: absolute;
+      left: 50%;
+      bottom: clamp(20px, 2.4vw, 40px);
+      transform: translateX(-50%);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, .55);
+      text-decoration: none;
+    }
+
+    .gr-hero-scroll svg {
+      width: 16px;
+      height: 16px;
+      animation: grBob 1.9s var(--ease) infinite
+    }
+
+    @keyframes grBob {
+
+      0%,
+      100% {
+        transform: translateY(0);
+        opacity: .55
+      }
+
+      45%,
+      55% {
+        transform: translateY(6px);
+        opacity: 1
+      }
+    }
+
+    /* En móvil los dos CTA van uno debajo del otro y con el mismo ancho: al
+   quedar en fila se partían con anchos distintos y se leía desprolijo.
+   El indicador de scroll se mantiene visible (antes se ocultaba). */
+    @media (max-width:760px) {
+      .gr-hero-ctas {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--gutter)
+      }
+
+      /* 3 de las 4 columnas: centrados, con media columna de aire a cada lado. */
+      .gr-hero-ctas .gr-btn {
+        width: calc(3 * var(--col) + 2 * var(--gutter));
+        justify-content: center;
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   LÍNEA DE TIEMPO — cards editoriales con foto a sangre
+   Las históricas van en gris (son material de archivo, virado y
+   dispar); solo la del presente va a color y por eso se distingue.
+══════════════════════════════════════════════════════════════ */
+    .gr-timeline {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(10px, 1.1vw, 22px);
+    }
+
+    /* El alto de la card sale del ancho, y el ancho cambia mucho entre
+   breakpoints: 4 columnas angostas, 2 anchas, o una sola a todo lo ancho.
+   Por eso la proporción se reajusta en cada tramo — con una sola, a 4 up
+   queda bien pero a 1 up la card se vuelve una torre. */
+    .gr-tl-card {
+      position: relative;
+      aspect-ratio: 5/6;
+      overflow: hidden;
+      border-radius: clamp(10px, .85vw, 16px);
+      background: #0a0a0c;
+      isolation: isolate;
+    }
+
+    .gr-tl-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(1) contrast(1.06) brightness(.9);
+      transition: transform .7s var(--ease), filter .5s;
+    }
+
+    .gr-tl-card--now .gr-tl-photo {
+      filter: contrast(1.04) brightness(.96)
+    }
+
+    /* Los hover van tras @media (hover:hover): en táctil el navegador deja el
+   estado :hover pegado al tocar, así que el zoom de la foto se disparaba al
+   apoyar el dedo para hacer scroll y la card parecía moverse. */
+    @media (hover:hover) {
+      .gr-tl-card:hover .gr-tl-photo {
+        transform: scale(1.06);
+        filter: grayscale(1) contrast(1.1) brightness(1)
+      }
+
+      .gr-tl-card--now:hover .gr-tl-photo {
+        filter: contrast(1.06) brightness(1.02)
+      }
+    }
+
+    .gr-tl-scrim {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0, 0, 0, .82) 0%, rgba(0, 0, 0, .18) 38%, rgba(0, 0, 0, .6) 72%, rgba(0, 0, 0, .93) 100%);
+    }
+
+    .gr-tl-body {
+      position: relative;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: clamp(14px, 1.3vw, 26px) clamp(12px, 1.1vw, 22px);
+    }
+
+    .gr-tl-top {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding-bottom: clamp(8px, .7vw, 14px);
+      border-bottom: 1px solid rgba(255, 255, 255, .24);
+    }
+
+    .gr-tl-year {
+      font-size: clamp(13px, 1.15vw, 20px);
+      letter-spacing: .1em;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .gr-tl-year em {
+      font-style: normal;
+      color: var(--gr-red)
+    }
+
+    .gr-tl-main {
+      margin-top: auto
+    }
+
+    .gr-tl-title {
+      font-size: clamp(17px, 1.7vw, 30px);
+      font-weight: 400;
+      line-height: 1.06;
+      letter-spacing: -.01em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .gr-tl-text {
+      margin-top: clamp(8px, .8vw, 15px);
+      font-size: clamp(12px, 1vw, 17px);
+      line-height: 1.45;
+      color: rgba(255, 255, 255, .8);
+      text-wrap: balance;
+    }
+
+    @media (max-width:1100px) {
+      .gr-timeline {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px
+      }
+
+      .gr-tl-card {
+        aspect-ratio: 4/3
+      }
+
+      /* 2 columnas: la card duplica ancho */
+    }
+
+    /* La línea de tiempo solo es carrusel en móvil: arriba de 760 es una reja de
+   4 columnas y la navegación no tiene sentido, por eso se esconde por defecto.
+   ⚠️ Va con doble clase (.gr-vnav.gr-tl-nav) a propósito: el .gr-vnav de más
+   abajo trae display:flex y con una sola clase le ganaría por orden. */
+    .gr-vnav.gr-tl-nav {
+      display: none
+    }
+
+    @media (max-width:760px) {
+
+      /* Carrusel de UNA card por vista: ocupa las 4 columnas completas, sin
+     asomo de la siguiente. Se pasa con los botones de abajo.
+     */
+      .gr-timeline {
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: var(--card-4col);
+        gap: var(--gutter);
+        /* scroll-behavior:smooth es lo que hace que los botones deslicen en vez
+       de saltar — misma animación que el carrusel de GR Garage.
+
+       overflow HIDDEN en LOS DOS EJES, no auto. En horizontal, porque si no,
+       al bajar por la página con el puntero encima la componente horizontal
+       del gesto lo movía y el snap reacomodaba las cards.
+       En vertical, porque .reveal deja las cards con translateY(26px) hasta
+       que aparecen: esos 26 px son overflow y volvían el contenedor
+       desplazable a lo alto. Al moverlo, el scrollTop se quedaba ahí y la
+       card terminaba recortada por arriba (se comía el año).
+       Sigue siendo contenedor de scroll, así que scrollLeft por código (los
+       botones) funciona igual, con su smooth y su snap. touch-action:pan-y
+       queda como refuerzo para el táctil. */
+        overflow: hidden;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+        touch-action: pan-y;
+        margin-inline: calc(var(--pad-x) * -1);
+        padding-inline: var(--pad-x);
+        padding-bottom: 6px;
+        /* Complemento obligado del bleed: sin scroll-padding, el snap alinea la
+       primera card con el borde del contenedor y el carrusel se desplaza los
+       15 px del padding, sacando la card de la columna 1. */
+        scroll-padding-inline: var(--pad-x);
+      }
+
+      .gr-timeline::-webkit-scrollbar {
+        display: none
+      }
+
+      .gr-timeline>li {
+        scroll-snap-align: start
+      }
+
+      .gr-tl-card {
+        aspect-ratio: 5/6
+      }
+
+      /* una sola card, a todo el ancho útil */
+      .gr-vnav.gr-tl-nav {
+        display: flex;
+        margin-top: clamp(16px, 2.2vh, 28px)
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   PÓSTER DE LA CITA — franja roja editorial
+   Cita arriba, franja de escena abajo y el recorte del vehículo
+   encima, saliéndose por el borde superior de la franja.
+══════════════════════════════════════════════════════════════ */
+    .gr-poster {
+      position: relative;
+      overflow: hidden;
+      background: var(--gr-red-ui);
+      padding: var(--sec-y) 0 clamp(20px, 2.2vw, 44px);
+    }
+
+    .gr-poster-stripes {
+      position: absolute;
+      top: clamp(20px, 2.4vw, 54px);
+      right: clamp(16px, 2vw, 48px);
+      width: clamp(84px, 11vw, 220px);
+      opacity: .85;
+      pointer-events: none;
+    }
+
+    .gr-poster-quote {
+      position: relative;
+      z-index: 2;
+      text-align: center
+    }
+
+    .gr-poster-quote p {
+      /* 38ch deja la frase en dos líneas exactas */
+      font-size: clamp(19px, 2.6vw, 50px);
+      max-width: 38ch;
+      margin-inline: auto;
+      line-height: 1.18;
+      letter-spacing: -.01em;
+      color: #0a0a0a;
+    }
+
+    /* "Toyota" en blanco: es la palabra que le negaron a ese equipo */
+    .gr-poster-quote em {
+      font-style: normal;
+      color: #fff
+    }
+
+    /* Los dos archivos vienen a 2000px de ancho y compuestos para ir uno
+   sobre otro con el borde inferior alineado: el auto va en flujo normal
+   y fija el alto del bloque, la franja se ancla absoluta al pie.
+     franja  2000 x 677   ·   auto  2000 x 831 */
+    /* Tope de ancho fijo, a propósito, fuera del grid de columnas: el alto del
+   recorte del vehículo sale de su ancho, y a 1256 medía 522 px y la sección
+   dejaba de entrar en un viewport de 900.
+   El pie usa el mismo token, así que la línea y el logo siempre miden lo
+   mismo que la foto. */
+    .gr-poster {
+      --poster-w: 1000px
+    }
+
+    .gr-poster-stage {
+      position: relative;
+      max-width: var(--poster-w);
+      margin: clamp(20px, 2.2vw, 48px) auto 0
+    }
+
+    .gr-poster-band {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      aspect-ratio: 2000/677;
+      overflow: hidden;
+      background: #0a0a0c;
+    }
+
+    .gr-poster-band img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top
+    }
+
+    .gr-poster-carwrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 2000/831;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .gr-poster-car {
+      width: 100%;
+      height: auto
+    }
+
+    .gr-poster-foot {
+      position: relative;
+      z-index: 2;
+      width: min(100%, var(--poster-w));
+      margin-inline: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: clamp(14px, 1.4vw, 32px);
+      margin-top: clamp(18px, 1.9vw, 42px);
+      padding-top: clamp(16px, 1.7vw, 38px);
+      border-top: 1px solid rgba(255, 255, 255, .35);
+    }
+
+    /* Va la variante -red-bg del lockup: en la normal la R de Racing es
+   roja y sobre este fondo desaparecería. Y NADA de filtro CSS encima:
+   aplanar todo a blanco fundiría la placa negra con las letras GR. */
+    .gr-poster-logo {
+      width: clamp(122px, 13vw, 300px);
+      height: auto;
+      flex-shrink: 0
+    }
+
+    .gr-poster-chevrons {
+      height: clamp(8px, .7vw, 15px);
+      width: auto;
+      flex-shrink: 0;
+      filter: brightness(0) invert(1);
+      opacity: .85;
+    }
+
+    /* Más aire arriba y abajo: apilado, el recorte del vehículo es chico y la
+   banda roja quedaba apretada contra las secciones vecinas. */
+    @media (max-width:760px) {
+      .gr-poster {
+        padding: clamp(48px, 13vw, 72px) 0 clamp(44px, 12vw, 66px)
+      }
+    }
+
+    /* El póster NO sale a sangre en móvil: el recorte del vehículo y la franja
+   respetan los canales de --pad-x, igual que el resto del bloque, así que
+   toda la sección cae sobre las 4 columnas del grid. */
+
+    /* ══════════════════════════════════════════════════════════════
+   GR GARAGE — cards de vehículo (marco blanco, cuerpo gris)
+   Carrusel: 3 visibles en desktop, 2 en tablet, 1.1 en móvil.
+══════════════════════════════════════════════════════════════ */
+    /* ── Bloque de modelos ────────────────────────────────────────
+   Desktop: dos columnas. El encabezado va arriba a la izquierda y la
+   navegación justo debajo; el carrusel ocupa la columna derecha entera.
+   El orden del DOM es head → cards → nav (el que necesita el móvil), así
+   que acá el grid reubica la nav a la fila 2 de la columna izquierda. */
+    .gr-models {
+      display: grid;
+      grid-template-columns: minmax(200px, 22%) 1fr;
+      grid-template-rows: auto 1fr;
+      gap: clamp(18px, 2vw, 38px) clamp(20px, 2.4vw, 56px);
+      align-items: start;
+    }
+
+    .gr-models-head {
+      grid-column: 1;
+      grid-row: 1
+    }
+
+    .gr-models .gr-vgrid {
+      grid-column: 2;
+      grid-row: 1 / span 2
+    }
+
+    .gr-models>.gr-vnav {
+      grid-column: 1;
+      grid-row: 2;
+      justify-content: flex-start;
+      align-self: start
+    }
+
+    .gr-models-head .gr-lead {
+      max-width: 34ch;
+      font-size: clamp(13px, 1vw, 17px)
+    }
+
+    @media (max-width:1360px) {
+
+      /* Apilado: el orden del DOM ya deja los botones DEBAJO de las cards */
+      /* stretch explícito: la regla base pone align-items:start y, en un flex
+     en columna, eso es el eje TRANSVERSAL — dejaba el carrusel encogido a
+     su contenido en vez de ocupar el ancho. */
+      .gr-models {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: clamp(16px, 2.2vh, 30px)
+      }
+
+      /* align-self:stretch por el mismo motivo que el align-items de arriba:
+     sin él la nav se encoge a su contenido y el center no tiene qué centrar. */
+      .gr-models>.gr-vnav {
+        justify-content: center;
+        align-self: stretch
+      }
+
+      .gr-models-head .gr-lead {
+        max-width: none
+      }
+    }
+
+    .gr-vgrid {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: calc((100% - 2 * clamp(14px, 1.4vw, 30px)) / 3);
+      gap: clamp(14px, 1.4vw, 30px);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      /* overflow-x fuerza overflow-y auto → el padding evita que se
+     recorte la sombra al pie de las cards */
+      padding: 4px 0 clamp(6px, .6vw, 12px);
+    }
+
+    .gr-vgrid::-webkit-scrollbar {
+      display: none
+    }
+
+    .gr-vgrid>* {
+      scroll-snap-align: start
+    }
+
+    @media (max-width:1000px) {
+      .gr-vgrid {
+        grid-auto-columns: calc((100% - clamp(14px, 1.4vw, 30px)) / 2)
+      }
+    }
+
+    /* ── Card ──
+   Todo lo de adentro se dimensiona en cqi (1cqi = 1% del ancho de la card),
+   no en vw: así la card escala como una pieza cuando cambia de ancho, en vez
+   de mantener un texto de tamaño fijo dentro de una caja que se achica.
+   Los clamp() ponen el piso de legibilidad y el techo. */
+    .gr-vcard {
+      container-type: inline-size;
+      display: block;
+      height: 100%;
+      background: #fff;
+      border-radius: clamp(14px, 5.4cqi, 26px);
+      padding: clamp(6px, 2.7cqi, 11px);
+      box-shadow: 0 clamp(12px, 1.3vw, 30px) clamp(30px, 3.2vw, 74px) -18px rgba(0, 0, 0, .75);
+      transition: transform .28s var(--ease), box-shadow .28s;
+    }
+
+    .gr-vcard:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 clamp(18px, 2vw, 44px) clamp(40px, 4.4vw, 100px) -18px rgba(0, 0, 0, .85);
+    }
+
+    .gr-vcard-body {
+      background: #d9d9db;
+      border-radius: clamp(10px, 4cqi, 20px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .gr-vcard-photo {
+      position: relative;
+      aspect-ratio: 7/5;
+      overflow: hidden;
+      flex: 0 0 auto
+    }
+
+    /* cover, no contain: con contain la Fortuner y la Hilux —más altas que
+   el recuadro— dejaban franjas grises a los lados. Los recortes van de 1,23
+   a 1,43 y promedian ~1,36, así que a 7/5 el recorte cae sobre el margen
+   transparente del PNG, no sobre el vehículo. */
+    .gr-vcard-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .6s var(--ease);
+    }
+
+    .gr-vcard:hover .gr-vcard-photo img {
+      transform: scale(1.05)
+    }
+
+    .gr-vcard-info {
+      padding: clamp(12px, 4.7cqi, 20px) clamp(12px, 4.7cqi, 20px) clamp(12px, 4.5cqi, 19px);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(7px, 2.7cqi, 12px);
+      flex: 1 1 auto;
+    }
+
+    /* Chips con la forma inclinada de los botones GR */
+    .gr-chips {
+      /* La altura de un chip la manda el ÍCONO (1.35em), no el texto: si la
+     reserva se calcula sobre el texto queda un par de px corta, y la card
+     que sí usa dos filas se estira respecto a las de una → los nombres
+     dejan de alinearse. Con --chip-h fijado en el propio chip, dos filas
+     miden exactamente lo reservado. */
+      --chip-f: clamp(8.5px, 3.2cqi, 13px);
+      --chip-py: clamp(3.5px, 1.5cqi, 7px);
+      --chip-h: calc(var(--chip-f) * 1.35 + 2 * var(--chip-py));
+      --chip-gap: clamp(6px, 2.3cqi, 11px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--chip-gap);
+      min-height: calc(2 * var(--chip-h) + var(--chip-gap));
+      align-content: flex-start;
+    }
+
+    .gr-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: var(--chip-h);
+      padding: 0 clamp(8px, 3cqi, 13px);
+      background: #fff;
+      color: #16161a;
+      border-radius: clamp(3px, 1cqi, 6px);
+      font-size: var(--chip-f);
+      transform: skewX(-14deg);
+    }
+
+    .gr-chip>span {
+      display: inline-flex;
+      align-items: center;
+      gap: clamp(4px, 1.6cqi, 8px);
+      transform: skewX(14deg);
+    }
+
+    .gr-chip svg {
+      width: 1.35em;
+      height: 1.35em;
+      flex-shrink: 0;
+      color: var(--gr-red)
+    }
+
+    /* Sin pesos que jugar (DecimaMonoPro trae uno solo): la jerarquía entre
+   modelo y versión la hace el color, no la negrita. */
+    .gr-vcard-name {
+      --name-f: clamp(15px, 5.7cqi, 24px);
+      font-size: var(--name-f);
+      font-weight: 400;
+      line-height: 1.08;
+      /* Dos líneas reservadas: el GR Yaris no lleva versión debajo y sin
+     esto su bloque quedaba más corto que el de las otras seis. */
+      min-height: calc(var(--name-f) * 1.08 * 2);
+      letter-spacing: -.01em;
+      color: #16161a;
+    }
+
+    .gr-vcard-variant {
+      display: block;
+      color: #8b8b91
+    }
+
+    .gr-vcard-desc {
+      font-size: clamp(10px, 3.7cqi, 15px);
+      line-height: 1.45;
+      text-wrap: balance;
+      color: #5b5b62;
+    }
+
+    /* CTA rojo GR (#DF001A, no #FF0000: con el rojo puro el blanco no pasa AA).
+   margin-top:auto ancla el botón abajo para que los siete queden parejos.
+   El font-weight:700 es sintético (Decima trae un peso), pero en mayúsculas
+   y con tracking se lee limpio; el text-stroke lo remata. */
+    .gr-vcard-cta {
+      align-self: flex-start;
+      margin-top: auto;
+      background: var(--gr-red-ui);
+      color: #fff;
+      font-weight: 700;
+      -webkit-text-stroke: .03em currentColor;
+      padding: clamp(9px, 3cqi, 15px) clamp(14px, 5cqi, 28px);
+      font-size: clamp(9px, 3.4cqi, 13px);
+    }
+
+    .gr-vcard-cta:hover {
+      background: var(--gr-red-dark);
+      transform: skewX(-14deg) translateY(-2px)
+    }
+
+    /* Navegación del carrusel — botones blancos: negros serían invisibles
+   contra el fondo de la sección. */
+    .gr-vnav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(20px, 2vw, 48px)
+    }
+
+    .gr-vnav-btn {
+      width: clamp(42px, 3vw, 54px);
+      height: clamp(42px, 3vw, 54px);
+      border-radius: 50%;
+      background: #fff;
+      color: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform .16s var(--ease), opacity .2s, background .2s;
+    }
+
+    .gr-vnav-btn:hover {
+      background: #e8e8e8;
+      transform: scale(1.06)
+    }
+
+    .gr-vnav-btn:active {
+      transform: scale(.92)
+    }
+
+    .gr-vnav-btn[disabled] {
+      opacity: .25;
+      pointer-events: none
+    }
+
+    .gr-vnav-btn svg {
+      width: 42%;
+      height: 42%
+    }
+
+    .gr-vnav-count {
+      font-size: clamp(14px, 1.15vw, 24px);
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+      min-width: 7ch;
+      text-align: center;
+    }
+
+    /* Una card por vista (4 columnas completas), igual que la historia */
+    @media (max-width:760px) {
+      .gr-vgrid {
+        grid-auto-columns: var(--card-4col);
+        gap: var(--gutter);
+        margin-inline: calc(var(--pad-x) * -1);
+        padding-inline: var(--pad-x);
+        scroll-padding-inline: var(--pad-x);
+        /* ver nota en .gr-timeline */
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   GALERÍA — bento sobre blanco. Es el respiro claro de la página,
+   entre el negro de los modelos y el negro del cierre.
+══════════════════════════════════════════════════════════════ */
+    .gr-gallery {
+      background: #fff;
+      color: var(--ink);
+      padding: var(--sec-y) 0
+    }
+
+    .gr-gallery .gr-title {
+      color: var(--gr-red-ui)
+    }
+
+    .gr-gallery .gr-lead {
+      color: rgba(10, 10, 15, .6)
+    }
+
+    .gr-gallery .gr-eyebrow {
+      color: #8a8a92
+    }
+
+    .gr-gal-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: clamp(96px, 9.7vw, 168px);
+      gap: clamp(10px, 1.1vw, 22px);
+    }
+
+    .gr-gal-item {
+      position: relative;
+      overflow: hidden;
+      border-radius: clamp(12px, 1.2vw, 26px);
+      background: #ededef;
+      cursor: pointer;
+      border: 0;
+      padding: 0;
+      transition: transform .3s var(--ease);
+    }
+
+    .gr-gal-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .7s var(--ease)
+    }
+
+    /* La celda de nieve es muy apaisada y el recorte centrado dejaba el auto
+   afuera: vive entre el 65 y el 88% del alto del original. Se referencia por
+   src y no por :nth-child para que aguante un reordenamiento de la galería. */
+    .gr-gal-item img[src$="gr86-snow.jpg"] {
+      object-position: center 85%
+    }
+
+    .gr-gal-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: linear-gradient(to bottom, transparent 52%, rgba(0, 0, 0, .68));
+    }
+
+    .gr-gal-item:hover img {
+      transform: scale(1.06)
+    }
+
+    .gr-gal-item:active {
+      transform: scale(.985)
+    }
+
+    .gr-gal-cap {
+      position: absolute;
+      left: clamp(12px, 1vw, 24px);
+      bottom: clamp(10px, .9vw, 20px);
+      z-index: 2;
+      color: #fff;
+      font-size: clamp(10px, .8vw, 16px);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    /* Bento curado: 4 col × 3 filas = 12 celdas, 7 imágenes */
+    .gr-gal-item:nth-child(1) {
+      grid-column: 1/span 2;
+      grid-row: 1/span 2
+    }
+
+    .gr-gal-item:nth-child(2) {
+      grid-column: 3;
+      grid-row: 1
+    }
+
+    .gr-gal-item:nth-child(3) {
+      grid-column: 4;
+      grid-row: 1
+    }
+
+    .gr-gal-item:nth-child(4) {
+      grid-column: 3/span 2;
+      grid-row: 2
+    }
+
+    .gr-gal-item:nth-child(5) {
+      grid-column: 1/span 2;
+      grid-row: 3
+    }
+
+    .gr-gal-item:nth-child(6) {
+      grid-column: 3/span 2;
+      grid-row: 3
+    }
+
+    @media (max-width:900px) {
+      .gr-gal-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: clamp(120px, 26vw, 190px)
+      }
+
+      .gr-gal-item:nth-child(n) {
+        grid-column: auto;
+        grid-row: auto
+      }
+
+      .gr-gal-item:nth-child(1) {
+        grid-column: 1/span 2;
+        grid-row: span 2
+      }
+
+      .gr-gal-item:nth-child(6) {
+        grid-column: 1/span 2
+      }
+    }
+
+    @media (max-width:760px) {
+
+      /* Sobre el grid de 4 columnas: con gutter 20 cada pieza mide 2 columnas
+     exactas (170 px a 390) y la grande, las 4. */
+      .gr-gal-grid {
+        gap: var(--gutter)
+      }
+    }
+
+    .gr-disclaimer {
+      margin-top: clamp(14px, 1.4vw, 30px);
+      text-align: center;
+      font-size: clamp(11px, .9vw, 17px);
+      color: rgba(10, 10, 15, .45);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   LIGHTBOX de la galería
+══════════════════════════════════════════════════════════════ */
+    .gr-lb {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(16px, 4vw, 60px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .28s var(--ease);
+    }
+
+    .gr-lb[aria-hidden="false"] {
+      opacity: 1;
+      pointer-events: auto
+    }
+
+    .gr-lb-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(4, 4, 6, .94);
+      backdrop-filter: blur(14px)
+    }
+
+    .gr-lb-frame {
+      position: relative;
+      z-index: 1;
+      display: inline-block;
+      line-height: 0;
+      max-width: 100%;
+      max-height: 100%
+    }
+
+    .gr-lb-img {
+      max-width: 100%;
+      max-height: 78vh;
+      object-fit: contain;
+      border-radius: clamp(8px, .9vw, 18px);
+      box-shadow: 0 40px 120px -20px rgba(0, 0, 0, .7);
+    }
+
+    .gr-lb-close {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 12px;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, .16);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, .28);
+      color: #fff;
+      padding: 11px 22px;
+      border-radius: 100px;
+      font-family: 'DecimaMonoPro', monospace;
+      font-size: clamp(11px, .9vw, 15px);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      transition: background .2s, transform .15s;
+    }
+
+    .gr-lb-close:hover {
+      background: rgba(255, 255, 255, .3)
+    }
+
+    .gr-lb-close:active {
+      transform: scale(.96)
+    }
+
+    .gr-lb-close svg {
+      width: 1.1em;
+      height: 1.1em
+    }
+
+    .gr-lb-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 3;
+      width: clamp(48px, 4.4vw, 84px);
+      height: clamp(48px, 4.4vw, 84px);
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .14);
+      border: 1px solid rgba(255, 255, 255, .24);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, transform .15s;
+    }
+
+    .gr-lb-nav:hover {
+      background: rgba(255, 255, 255, .28)
+    }
+
+    .gr-lb-nav:active {
+      transform: translateY(-50%) scale(.92)
+    }
+
+    .gr-lb-nav svg {
+      width: 40%;
+      height: 40%
+    }
+
+    .gr-lb-prev {
+      left: clamp(10px, 2vw, 48px)
+    }
+
+    .gr-lb-next {
+      right: clamp(10px, 2vw, 48px)
+    }
+
+    .gr-lb-cap {
+      position: absolute;
+      left: 50%;
+      bottom: clamp(18px, 2.4vw, 50px);
+      transform: translateX(-50%);
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 11px 22px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, .1);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, .16);
+      color: #fff;
+      font-family: 'DecimaMonoPro', monospace;
+      white-space: nowrap;
+    }
+
+    .gr-lb-label {
+      font-size: clamp(11px, .9vw, 15px);
+      letter-spacing: .14em;
+      text-transform: uppercase
+    }
+
+    .gr-lb-count {
+      font-size: clamp(11px, .85vw, 14px);
+      color: rgba(255, 255, 255, .6);
+      font-variant-numeric: tabular-nums
+    }
+
+    body.gr-lb-open {
+      overflow: hidden
+    }
+
+    /* Móvil: las flechas bajan debajo de la foto (no encima). El visor pasa a
+   una reja: foto arriba a todo el ancho, flechas abajo lado a lado. */
+    @media (max-width:760px) {
+      .gr-lb {
+        display: grid;
+        grid-template-columns: auto auto;
+        grid-template-areas: "f f" "p n";
+        justify-content: center;
+        align-content: center;
+        gap: 20px 28px
+      }
+
+      .gr-lb-frame {
+        grid-area: f
+      }
+
+      .gr-lb-nav {
+        position: static;
+        transform: none
+      }
+
+      .gr-lb-nav:active {
+        transform: scale(.92)
+      }
+
+      .gr-lb-prev {
+        grid-area: p;
+        justify-self: end
+      }
+
+      .gr-lb-next {
+        grid-area: n;
+        justify-self: start
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   BOUTIQUE — franja roja de cierre comercial.
+   En el kiosko el CTA era un QR (no había navegador); en web pasa a
+   ser un enlace real al marketplace.
+══════════════════════════════════════════════════════════════ */
+    .gr-boutique {
+      position: relative;
+      overflow: hidden;
+      background: var(--gr-red-ui);
+      padding: var(--sec-y) 0;
+      text-align: center;
+    }
+
+    .gr-bq-stripes {
+      position: absolute;
+      top: clamp(-30px, -2vw, -12px);
+      right: clamp(-40px, -2.6vw, -16px);
+      width: clamp(180px, 24vw, 560px);
+      height: auto;
+      opacity: .4;
+      pointer-events: none;
+    }
+
+    .gr-bq-inner {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(10px, 1vw, 20px);
+    }
+
+    .gr-bq-title {
+      font-size: clamp(30px, 4vw, 56px);
+      font-weight: 400;
+      line-height: 1.02;
+      letter-spacing: -.02em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .gr-bq-lead {
+      font-size: clamp(14px, 1.25vw, 24px);
+      line-height: 1.45;
+      color: rgba(255, 255, 255, .88);
+      max-width: 60ch;
+    }
+
+    /* Card negra: la foto no es recorte —trae su propio fondo negro— así
+   que sobre negro sus bordes desaparecen dentro de la card. */
+    .gr-bq-card {
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+      align-items: center;
+      gap: clamp(16px, 1.8vw, 40px);
+      width: min(100%, calc(10 * var(--col) + 9 * var(--gutter)));
+      /* 10 columnas, como el panel de Síguenos */
+      margin-top: clamp(20px, 2vw, 42px);
+      padding: clamp(14px, 1.3vw, 28px);
+      background: #000;
+      border-radius: clamp(16px, 1.5vw, 34px);
+      text-align: left;
+      box-shadow: 0 clamp(16px, 1.7vw, 40px) clamp(40px, 4.2vw, 100px) -22px rgba(0, 0, 0, .85);
+    }
+
+    .gr-bq-shot {
+      aspect-ratio: 1146/866;
+      overflow: hidden;
+      border-radius: clamp(10px, 1vw, 22px)
+    }
+
+    .gr-bq-shot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .6s var(--ease)
+    }
+
+    .gr-bq-card:hover .gr-bq-shot img {
+      transform: scale(1.05)
+    }
+
+    .gr-bq-detail {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: clamp(10px, 1vw, 20px);
+      padding-right: clamp(6px, .8vw, 18px);
+    }
+
+    /* Badge GR sobre la card negra. El lado izquierdo del lockup es negro, así
+   que sobre #000 se perdería: el drop-shadow blanco muy sutil le devuelve el
+   contorno sin meter una caja de fondo. */
+    .gr-bq-logo {
+      height: clamp(30px, 2.8vw, 52px);
+      width: auto;
+      display: block;
+      filter: drop-shadow(0 0 1px rgba(255, 255, 255, .85)) drop-shadow(0 0 6px rgba(255, 255, 255, .25));
+    }
+
+    .gr-bq-name {
+      font-size: clamp(17px, 1.7vw, 32px);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -.01em;
+      color: #fff;
+    }
+
+    .gr-bq-copy {
+      font-size: clamp(12px, 1vw, 20px);
+      line-height: 1.5;
+      color: rgba(255, 255, 255, .72);
+    }
+
+    @media (max-width:760px) {
+
+      /* Apilada, la card va centrada y con el aire del gutter del grid (20).
+     El padding-right del detalle existe solo para la versión de dos columnas
+     y acá descuadraba el centrado: 20 a la derecha contra 14 a la izquierda.
+     Para volver a alineado a la izquierda: text-align:left en la card y
+     quitar el align-items:center del detalle. */
+      .gr-bq-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: var(--gutter)
+      }
+
+      .gr-bq-detail {
+        align-items: center;
+        padding-right: 0
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   SÍGUENOS — panel negro sobre fondo blanco
+   Medidas del diseño (artboard 1920): sección de 700 de alto y panel
+   de 1530×495. Los 1530 son las columnas 2 a 11 del grid, exactas:
+   10·135 + 9·20 = 1530. El panel queda centrado con una columna
+   completa de aire a cada lado.
+══════════════════════════════════════════════════════════════ */
+    .gr-social {
+      background: #fff;
+      color: var(--ink);
+      min-height: clamp(430px, 36.46vw, 700px);
+      /* 700 / 1920 = 36.46% */
+      /* grid y no flex: como flex item, .wrap se encogería al ancho de su
+     contenido y dejaría de marcar los márgenes del grid. */
+      display: grid;
+      align-content: center;
+      padding: var(--sec-y) 0;
+    }
+
+    .gr-social-panel {
+      position: relative;
+      /* el recorte del vehículo se sale del panel */
+      container-type: inline-size;
+      /* todo el interior escala en cqi con el panel */
+      width: calc(10 * var(--col) + 9 * var(--gutter));
+      max-width: 100%;
+      margin-inline: auto;
+      aspect-ratio: 1530/495;
+      /* Por debajo de ~1250 de viewport la proporción daría un panel más bajo
+     que su propio texto. El min-height lo levanta y el panel se va
+     volviendo más cuadrado en vez de recortar. */
+      min-height: clamp(300px, 26vw, 495px);
+      display: flex;
+      align-items: center;
+      background: var(--gr-black);
+      color: #fff;
+      border-radius: clamp(12px, 1.05vw, 20px);
+      overflow: hidden;
+      /* la foto llena el panel justo hasta las esquinas */
+      /* Resplandor rojo: una sombra pegada al borde y otra abierta y suave.
+     Va en --gr-red (#FF0000) y no en el rojo de UI porque acá es elemento
+     gráfico, no superficie con texto encima: no le aplica el mínimo AA. */
+      box-shadow:
+        0 0 clamp(14px, 1.3vw, 26px) rgba(255, 0, 0, .55),
+        0 0 clamp(50px, 5vw, 96px) rgba(255, 0, 0, .22);
+    }
+
+    .gr-social-text {
+      position: relative;
+      z-index: 2;
+      width: min(47cqi, 100%);
+      padding-left: clamp(22px, 6.4cqi, 100px);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .gr-social-text .gr-title {
+      font-size: clamp(24px, 3.6cqi, 56px)
+    }
+
+    .gr-social-text .gr-lead {
+      margin-top: clamp(10px, 1.5cqi, 24px);
+      font-size: clamp(13px, 1.5cqi, 24px);
+      max-width: none;
+    }
+
+    /* La foto trae la proporción exacta del panel (3060×990 = 1530×495 al doble),
+   así que lo llena entero en vez de ir como recorte suelto. Queda DETRÁS del
+   texto porque .gr-social-text lleva z-index:2. El object-position ancla el
+   auto a la derecha para los anchos donde manda el min-height y la
+   proporción del panel deja de ser 1530/495. */
+    /* display:contents saca al <picture> del árbol de cajas: sin eso, en móvil
+   el ítem del flex sería el <picture> y el width:100% del <img> no serviría. */
+    .gr-social-panel picture {
+      display: contents
+    }
+
+    .gr-social-shot {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: right center;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* CTA: solo el @ de Instagram. El aro blanco de la flecha no lleva borde
+   porque sobre el rojo ya separa por luminancia. */
+    .gr-social-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: clamp(9px, 1.2cqi, 20px);
+      margin-top: clamp(14px, 2.2cqi, 36px);
+      padding: clamp(8px, 1cqi, 16px) clamp(10px, 1.1cqi, 18px);
+      background: var(--gr-red-ui);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      transform: skewX(-14deg);
+      transition: transform .22s var(--ease), box-shadow .22s;
+    }
+
+    /* Mismo paralelogramo que .gr-btn: skewX en el botón y contra-skew en cada
+   hijo, para que el ícono cuadrado siga cuadrado y el aro siga redondo. */
+    .gr-social-cta>* {
+      transform: skewX(14deg)
+    }
+
+    .gr-social-cta:hover {
+      transform: skewX(-14deg) translateY(-3px);
+      box-shadow: 0 18px 44px -18px rgba(223, 0, 26, .9);
+    }
+
+    .gr-social-icon {
+      flex-shrink: 0;
+      width: clamp(30px, 2.9cqi, 46px);
+      height: clamp(30px, 2.9cqi, 46px);
+      border-radius: clamp(8px, .75cqi, 12px);
+      background: rgba(255, 255, 255, .18);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gr-social-icon svg {
+      width: 58%;
+      height: 58%
+    }
+
+    /* Sobre este rojo el texto va en blanco PLENO, sin opacidad: al 70%
+   bajaba a 2.9:1. */
+    .gr-social-net {
+      font-size: clamp(13px, 1.35cqi, 22px);
+      color: #fff;
+      white-space: nowrap
+    }
+
+    .gr-social-go {
+      flex-shrink: 0;
+      width: clamp(26px, 2.4cqi, 38px);
+      height: clamp(26px, 2.4cqi, 38px);
+      border-radius: 50%;
+      background: #fff;
+      color: var(--gr-red-ui);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .22s var(--ease);
+    }
+
+    .gr-social-cta:hover .gr-social-go {
+      transform: skewX(14deg) translateX(4px)
+    }
+
+    .gr-social-go svg {
+      width: 46%;
+      height: 46%
+    }
+
+    @media (max-width:760px) {
+
+      /* Apilado: la foto sube arriba del todo y el texto va debajo. El panel
+     pierde la proporción fija y crece con su contenido; el padding pasa del
+     panel al texto para que la foto llegue a los bordes y las esquinas se
+     las recorte el border-radius del panel. */
+      .gr-social-panel {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0;
+        /* La medida del diseño: 345×430 a 375 de artboard. Los 345 salen solos
+       (375 menos los dos márgenes de 15); el alto lo fija la proporción. */
+        aspect-ratio: 345/430;
+        min-height: 0;
+        /* Tope para tablet: la proporción sola daría 910 de alto a 760 de ancho.
+       Por encima del tope el panel se ensancha y la foto se recorta, que es
+       lo que se quiere. No toca a ningún teléfono: a 430 el panel mide 499. */
+        max-height: 560px;
+      }
+
+      /* La foto pasa a flujo normal y llena la parte de abajo del panel, a
+     sangre contra sus bordes: el padding vive en el texto, no en el panel,
+     y las esquinas se las recorta el border-radius.
+     flex:1 y no una proporción propia: se queda con el alto que sobre tras el
+     texto. Así el panel respeta sus 430 pase lo que pase con el copy, en vez
+     de recortarlo contra el overflow:hidden. */
+      .gr-social-shot {
+        position: static;
+        flex: 1 1 0;
+        min-height: 0;
+        width: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+
+      /* Adentro del panel el contenedor mide 345, así que 1cqi = 3,45 px y todo
+     el ritmo interior se queda pegado al suelo de sus clamp. Acá va explícito. */
+      .gr-social-text {
+        width: 100%;
+        padding: 26px 24px;
+      }
+
+      .gr-social-text .gr-eyebrow {
+        margin-bottom: 12px
+      }
+
+      /* 12 px, como el resto del copy en móvil. La fuente es monoespaciada: a 13
+     la bajada se parte en 4 líneas dentro de estos 297 de ancho, y esas 19,5
+     px extra salen del alto de la foto, que ya va justa. */
+      .gr-social-text .gr-lead {
+        margin-top: 12px;
+        font-size: 12px;
+        line-height: 1.55
+      }
+
+      .gr-social-cta {
+        margin-top: 16px;
+        padding: 7px 10px
+      }
+
+      .gr-social-icon {
+        width: 28px;
+        height: 28px
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   CIERRE — logo y frase alineados a la izquierda sobre la foto de
+   fondo. El degradado negro por encima existe para que el texto
+   tenga contraste sobre la mitad izquierda de la imagen.
+   El resplandor rojo y el negro quedan como capa de abajo: si la
+   foto todavía no está, la sección se ve igual de bien sin ella.
+══════════════════════════════════════════════════════════════ */
+    .gr-outro {
+      position: relative;
+      overflow: hidden;
+      min-height: clamp(400px, 35.4vw, 680px);
+      /* grid, por lo mismo que .gr-social: el .wrap tiene que ocupar el ancho
+     completo para que su padding sea el margen del grid. */
+      display: grid;
+      align-content: center;
+      padding: clamp(48px, 5vw, 110px) 0;
+      border-top: 1px solid rgba(255, 255, 255, .08);
+      /* El velo y el encuadre de la foto van en variables porque en móvil
+     cambian de eje: horizontal en desktop (texto a la izquierda, foto a la
+     derecha) y vertical en móvil (texto arriba, foto abajo). */
+      --outro-scrim: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, .88) 30%, rgba(0, 0, 0, .45) 58%, rgba(0, 0, 0, .15) 100%);
+      --outro-focus: center right;
+      background:
+        var(--outro-scrim),
+        url("assets/outro/pista-noche.jpg") var(--outro-focus) / cover no-repeat,
+        radial-gradient(ellipse 82% 60% at 50% 118%, rgba(255, 0, 0, .26) 0%, transparent 70%),
+        #000;
+    }
+
+    .gr-outro-inner {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      gap: clamp(14px, 1.4vw, 30px);
+    }
+
+    .gr-outro-logo {
+      width: min(100%, calc(4 * var(--col) + 3 * var(--gutter)));
+      height: auto
+    }
+
+    .gr-outro-claim {
+      font-size: clamp(18px, 1.9vw, 32px);
+      line-height: 1.3;
+      color: #fff;
+      max-width: 26ch;
+    }
+
+    @media (max-width:760px) {
+      .gr-outro {
+        /* La foto móvil ya viene virada y oscurecida, así que el velo casi no
+       toca la mitad de arriba (ahí van los autos) y solo cierra abajo, que
+       es donde cae el texto y donde hay faros y carrocería blanca. */
+        --outro-scrim: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, .05) 24%, rgba(0, 0, 0, .58) 56%, rgba(0, 0, 0, .8) 100%);
+        /* 62% y no center: los autos viven en la mitad derecha del encuadre y a
+       390 de ancho un recorte centrado los dejaba fuera. */
+        --outro-focus: 62% center;
+        align-content: center;
+        min-height: clamp(460px, 133.33vw, 560px);
+        /* 500 px a 375 de artboard */
+        padding: clamp(40px, 10vw, 60px) 0;
+        /* La versión móvil de la foto va como capa de arriba: si el archivo no
+       está, esa capa no pinta y se ve la de desktop, sin romper nada. */
+        background:
+          var(--outro-scrim),
+          url("assets/outro/pista-noche-mobile.jpg") center / cover no-repeat,
+          url("assets/outro/pista-noche.jpg") var(--outro-focus) / cover no-repeat,
+          radial-gradient(ellipse 82% 60% at 50% 118%, rgba(255, 0, 0, .26) 0%, transparent 70%),
+          #000;
+      }
+
+      /* Centrado, como la referencia. */
+      .gr-outro-inner {
+        align-items: center;
+        text-align: center
+      }
+
+      /* A 4 columnas el lockup ocupaba el ancho entero y pesaba demasiado. */
+      .gr-outro-logo {
+        width: min(78%, 300px)
+      }
+
+      .gr-outro-claim {
+        font-size: clamp(19px, 5.6vw, 26px);
+        max-width: 14ch
+      }
+    }
+
+    /* El contenido arranca en la columna 2, no en la 1: un --pad-x más una
+   columna más un gutter (195 px a 1920). Solo en desktop — en el grid de 4
+   de móvil una columna entera de sangría se comería el bloque. */
+    @media (min-width:761px) {
+      .gr-outro-inner {
+        padding-left: calc(var(--pad-x) + var(--col) + var(--gutter))
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   FOOTER GR — barra propia, ya no la réplica de toyota.com.co
+   Negro, como el header, para cerrar la página con la misma
+   marca. La franja va separada del bloque de cierre —que también
+   es negro— por la línea de 1px de arriba, no por el color.
+   Los enlaces mantienen Toyota Type: son textos largos y legales,
+   y DecimaMonoPro a ese tamaño se lee peor. Las versalitas del
+   sistema GR quedan para los títulos de columna.
+══════════════════════════════════════════════════════════════ */
+    .t-footer {
+      background: #0b0b0d;
+      color: #fff;
+      border-top: 1px solid rgba(255, 255, 255, .14);
+      padding-block: clamp(40px, 4vw, 72px) 0;
+      font-size: 14px;
+    }
+
+    .t-footer a {
+      text-decoration: none;
+      color: inherit
+    }
+
+    /* Todo el footer vive entre la columna 2 y la 11 (.wrap.is-10col), igual que
+   Los inicios, GR Garage, la galería y Boutique. */
+
+    /* Fila 1 · el logo a la izquierda y el grupo de listas pegado a la derecha,
+   para que la última columna termine justo donde terminan el divider y el
+   icono de Instagram. Las listas van a ancho de contenido, no en reja de
+   anchos iguales: así la última cierra sobre el borde en vez de dejar un
+   sobrante a su derecha. De paso los enlaces largos dejan de partirse. */
+    .t-footer-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: clamp(24px, 3vw, 56px);
+    }
+
+    .t-footer-cols {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: clamp(24px, 3vw, 56px) clamp(26px, 3.4vw, 68px);
+      /* margin-left:auto y no solo el space-between del padre: cuando el grupo no
+     cabe junto al logo y baja a una segunda línea, el space-between lo dejaría
+     pegado a la izquierda y la última columna perdería el borde. */
+      margin-left: auto;
+    }
+
+    /* Ancho explícito: como ítem de flex, el <a> se dimensiona por el max-content
+   del SVG (964 px de viewBox) y quedaba más ancho que el logo que contiene. */
+    .t-footer-brand {
+      display: block;
+      flex-shrink: 0;
+      width: min(100%, 220px)
+    }
+
+    .t-footer-logo {
+      width: 100%;
+      height: auto
+    }
+
+    .t-footer-title {
+      display: block;
+      margin-bottom: 14px;
+      font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-synthesis: none;
+      font-size: 11px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, .5);
+    }
+
+    .t-footer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px
+    }
+
+    .t-footer-list a {
+      color: rgba(255, 255, 255, .8);
+      transition: color .2s
+    }
+
+    .t-footer-list a:hover {
+      color: #fff
+    }
+
+    /* Instagram va en el mismo botón circular que el WhatsApp del header: suelto
+   en la esquina se leía como un glifo perdido, y así ata las dos barras. */
+    .t-footer-social {
+      display: flex;
+      align-items: center;
+      gap: clamp(14px, 1.4vw, 22px)
+    }
+
+    .t-footer-social a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .08);
+      transition: background .22s, transform .22s var(--ease);
+    }
+
+    .t-footer-social a:hover {
+      background: var(--gr-red-ui);
+      transform: translateY(-2px)
+    }
+
+    /* Los PNG de redes vienen en negro: el filtro los aplana a blanco. */
+    .t-footer-social img {
+      width: 17px;
+      height: 17px;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+      opacity: .78;
+      transition: opacity .2s;
+    }
+
+    .t-footer-social a:hover img {
+      opacity: 1
+    }
+
+    /* Fila 2 · legales a la izquierda, Instagram a la derecha.
+   ⚠️ La línea va acá y no en el .wrap: el wrap lleva su padding-inline, así
+   que un borde puesto sobre él se dibuja sobre su caja exterior y sobresale
+   40 px por cada lado de las columnas. */
+    .t-footer-mid {
+      /* nowrap a propósito: con wrap, el flex corta línea ANTES de encoger, así
+     que en cuanto los siete legales no caben de una, Instagram se iba a una
+     línea suelta. Sin wrap, los enlaces se encogen y parten dentro de su caja
+     y el icono se queda arriba a la derecha. */
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px clamp(24px, 3vw, 60px);
+      margin-top: clamp(32px, 3.2vw, 56px);
+      padding-top: clamp(22px, 2.2vw, 36px);
+      border-top: 1px solid rgba(255, 255, 255, .12);
+      font-size: 12px;
+    }
+
+    /* Fila 3 · copyright, cerrando el footer. Es lo menos importante, así que baja
+   de tamaño y de contraste: sin esa diferencia las dos filas se leían como un
+   mismo bloque de gris. */
+    .t-footer-legal {
+      display: flex;
+      flex-wrap: wrap;
+      row-gap: 4px;
+      margin-top: clamp(14px, 1.4vw, 22px);
+      padding-bottom: clamp(28px, 2.8vw, 48px);
+      font-size: 11.5px;
+      line-height: 1.9;
+      color: rgba(255, 255, 255, .34);
+    }
+
+    /* Los siete legales van en UNA fila —los de accesibilidad, privacidad y
+   cookies incluidos— y no en una banda aparte al pie: ahí abajo quedaban
+   solos, pidiendo su propio filete para no verse sueltos. */
+    .t-footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      row-gap: 4px;
+      /* Que se encoja y parta sus propias líneas en vez de empujar a Instagram
+     a una línea aparte cuando los siete no caben de una. */
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 12.5px;
+      line-height: 1.9;
+      color: rgba(255, 255, 255, .68);
+    }
+
+    .t-footer-links a {
+      transition: color .2s
+    }
+
+    .t-footer-links a:hover {
+      color: #fff
+    }
+
+    /* Separadores en punto medio entre elementos, en vez de dejarlos flotando a
+   base de espacios. Color propio para que el hover del enlace no se los lleve
+   por herencia, y ::after del anterior —no ::before del siguiente— para que
+   al partirse la fila el punto cierre línea en vez de abrirla.
+   Las filas son flex y sin column-gap a propósito: flex se come los nodos de
+   espacio en blanco del HTML, que si no se sumaban al separador y
+   descuadraban las distancias. Los márgenes del punto son el único aire. */
+    .t-footer-links a:not(:last-child)::after,
+    .t-footer-legal span:not(:last-child)::after {
+      content: '·';
+      margin: 0 clamp(9px, .95vw, 16px);
+      color: rgba(255, 255, 255, .26);
+    }
+
+    .t-footer-acc-btn {
+      display: none
+    }
+
+    /* 1024 y no 900, igual que el header: entre 900 y 1024 el grupo de listas se
+   partía en dos líneas y la última dejaba de cerrar sobre el borde. */
+    @media (max-width:1024px) {
+
+      /* Apilado: las cuatro listas como acordeón */
+      .t-footer-top {
+        display: block
+      }
+
+      .t-footer-brand {
+        margin-bottom: clamp(24px, 5vw, 36px)
+      }
+
+      /* Sin puntos separadores: acá las filas se parten en varias líneas y el
+     punto quedaba colgando al final. El aire lo da el column-gap. */
+      .t-footer-links a:not(:last-child)::after,
+      .t-footer-legal span:not(:last-child)::after {
+        content: none
+      }
+
+      .t-footer-links {
+        column-gap: clamp(14px, 4.2vw, 24px)
+      }
+
+      /* Apilado en columna, con Instagram ARRIBA de los legales: colgando debajo
+     de tres líneas de letra chica quedaba perdido. */
+      .t-footer-mid {
+        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: clamp(16px, 4vw, 22px);
+        /* Sin filete propio: la reja de acordeones ya cierra con el borde
+       inferior de su última fila, y los dos juntos se veían pegados. */
+        border-top: 0;
+        padding-top: 0;
+        margin-top: clamp(20px, 5vw, 28px);
+      }
+
+      .t-footer-social {
+        order: -1
+      }
+
+      /* La divisoria baja acá, entre los legales y el copyright. */
+      .t-footer-legal {
+        flex-direction: column;
+        row-gap: 2px;
+        margin-top: clamp(18px, 4.5vw, 26px);
+        padding-top: clamp(18px, 4.5vw, 26px);
+        border-top: 1px solid rgba(255, 255, 255, .12);
+      }
+
+      .t-footer-cols {
+        display: grid;
+        grid-auto-flow: row;
+        gap: 0;
+        border-top: 1px solid rgba(255, 255, 255, .12);
+      }
+
+      .t-footer-col {
+        border-bottom: 1px solid rgba(255, 255, 255, .12)
+      }
+
+      .t-footer-acc-btn {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 18px 0;
+        color: #fff;
+        font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-synthesis: none;
+        font-size: 12px;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        text-align: left;
+      }
+
+      .t-footer-acc-icon {
+        font-size: 22px;
+        font-weight: 300;
+        line-height: 1;
+        color: var(--gr-red);
+        transition: transform .25s var(--ease);
+      }
+
+      .t-footer-acc-btn[aria-expanded="true"] .t-footer-acc-icon {
+        transform: rotate(45deg)
+      }
+
+      .t-footer-title {
+        display: none
+      }
+
+      .t-footer-body {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows .3s var(--ease)
+      }
+
+      .t-footer-body>div {
+        overflow: hidden
+      }
+
+      /* ⚠️ Hermano GENERAL (~) y no adyacente (+): entre el botón y el cuerpo
+     está el span del título, que en móvil va oculto pero sigue en el DOM.
+     Con + el selector no casaba y el acordeón no abría. */
+      .t-footer-acc-btn[aria-expanded="true"]~.t-footer-body {
+        grid-template-rows: 1fr
+      }
+
+      .t-footer-list {
+        padding-bottom: 18px
+      }
+
+      .t-footer-list a {
+        padding: 5px 0
+      }
+
+      .t-footer-mid {
+        justify-content: flex-start
+      }
+    }
+
+    /* ── Enlace al sitio global de GR (requisito del Web guideline 3-2) ──
+   Separado de la nav por un filete vertical, con el ícono de globo y el
+   nombre del país, como el template. Lleva a toyotagazooracing.com. */
+    .t-region {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      padding-left: clamp(14px, 1.4vw, 24px);
+      margin-left: clamp(2px, .4vw, 8px);
+      border-left: 1px solid rgba(255, 255, 255, .22);
+      font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-synthesis: none;
+      font-size: clamp(10.5px, .82vw, 13px);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: rgba(255, 255, 255, .72);
+      transition: color .2s;
+    }
+
+    .t-region:hover {
+      color: #fff
+    }
+
+    .t-region svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0
+    }
+
+    .t-mobile-region {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .t-mobile-region svg {
+      width: 18px;
+      height: 18px
+    }
+
+    /* ── Pie de marcas (template: logo Toyota con enlace al sitio global) ── */
+    .t-footer-brands {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: clamp(28px, 2.8vw, 48px);
+      padding-block: clamp(16px, 1.5vw, 24px);
+      border-top: 1px solid rgba(255, 255, 255, .12);
+    }
+
+    .t-footer-brands a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 clamp(18px, 1.8vw, 30px);
+      border-left: 1px solid rgba(255, 255, 255, .22);
+      border-right: 1px solid rgba(255, 255, 255, .22);
+      font-family: 'DecimaMonoPro', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-synthesis: none;
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, .72);
+    }
+
+    .t-footer-brands a+a {
+      border-left: 0
+    }
+
+    .t-footer-brands a:hover {
+      color: #fff
+    }
+
+    .t-footer-brands img {
+      height: 18px;
+      width: auto;
+      filter: brightness(0) invert(1);
+      opacity: .85
+    }
+
+    .t-footer-brands svg {
+      width: 15px;
+      height: 15px
+    }
+
+    /* Con el pie de marcas arriba, la fila de legales ya no lleva filete propio */
+    .t-footer-brands+.t-footer-mid {
+      border-top: 0;
+      margin-top: 0;
+      padding-top: clamp(10px, 1vw, 16px)
+    }
+
+    @media (max-width:1024px) {
+
+      /* La reja de acordeones ya cierra con filete: sin línea doble */
+      .t-footer-brands {
+        margin-top: clamp(14px, 4vw, 20px);
+        gap: 14px 0;
+        border-top: 0;
+        padding-top: 0
+      }
+
+      .t-footer-brands a:first-child {
+        padding-left: 0;
+        border-left: 0
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   HEADER BLANCO — como el template del Web guideline 3-2: barra
+   blanca, logo con letras negras (gazoo-racing-lockup-white-bg.svg)
+   y nav en tinta. Pisa los colores de la barra negra de arriba.
+══════════════════════════════════════════════════════════════ */
+    .t-header {
+      background: #fff;
+      color: var(--ink);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .t-nav-link {
+      color: rgba(10, 10, 15, .62)
+    }
+
+    .t-nav-link:hover,
+    .t-nav-link.is-current {
+      color: var(--ink)
+    }
+
+    .t-region {
+      color: rgba(10, 10, 15, .62);
+      border-left-color: rgba(10, 10, 15, .18)
+    }
+
+    .t-region:hover {
+      color: var(--ink)
+    }
+
+    .t-wa {
+      background: rgba(10, 10, 15, .06)
+    }
+
+    .t-wa img {
+      filter: brightness(0);
+      opacity: .8
+    }
+
+    .t-wa:hover img {
+      filter: brightness(0) invert(1);
+      opacity: 1
+    }
+
+    .t-burger {
+      color: var(--ink)
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+   REVEAL al hacer scroll — desactivado si el usuario pide menos
+   movimiento, y anulado por completo sin JS (.no-js).
+══════════════════════════════════════════════════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(26px);
+      transition: opacity .7s var(--ease), transform .7s var(--ease)
+    }
+
+    .reveal.is-in {
+      opacity: 1;
+      transform: none
+    }
+
+    .reveal[data-d="1"] {
+      transition-delay: .08s
+    }
+
+    .reveal[data-d="2"] {
+      transition-delay: .16s
+    }
+
+    .reveal[data-d="3"] {
+      transition-delay: .24s
+    }
+
+    .no-js .reveal {
+      opacity: 1;
+      transform: none
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      html {
+        scroll-behavior: auto
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    /* Móvil: botones con letra más grande (en su mínimo de 11px se leían chicos) */
+    @media (max-width:760px) {
+
+      /* Un poco más de peso: DecimaMonoPro trae uno solo, así que se engrosa
+     con un trazo fino (igual que el CTA de las cards) en vez de negrita sintética */
+      .gr-btn {
+        font-size: 13px;
+        -webkit-text-stroke: .035em currentColor
+      }
+
+      .gr-vcard-cta {
+        font-size: 12.5px
+      }
+    }
+
+    @media print {
+
+      .t-header,
+      .gr-lb,
+      .gr-hero-scroll {
+        display: none !important
+      }
+    }
+  </style>
+</head>
+
+<body class="no-js">
+  <script>document.body.classList.remove('no-js');</script>
+
+  <a class="sr-only" href="#gr-main">Saltar al contenido</a>
+
+  <!-- ═══════════════════════════════════════════════════════════
+     HEADER GR
+     Barra propia, con marca GR y solo los cuatro accesos que
+     aplican a esta landing. Los enlaces son absolutos porque la
+     página puede servirse fuera del dominio.
+═══════════════════════════════════════════════════════════ -->
+  <header class="t-header" id="t-header">
+    <div class="t-header-inner">
+
+      <a class="t-logo" href="https://www.toyota.com.co/deportivos-tgr/inicio"
+        aria-label="GAZOO Racing Colombia — Inicio">
+        <img src="assets/icons/brand/gazoo-racing-lockup-white-bg.svg" alt="GAZOO Racing" width="964" height="112">
+      </a>
+
+      <!-- Mismo orden que gazooracing.com.co: Garaje GR · Historia · Alquila ·
+         Noticias · Cotizador · Concesionarios Toyota · WhatsApp.
+         Garaje GR es ancla interna porque esa sección vive en la propia
+         página; el resto sale del dominio.
+         El galón de Garaje GR es un <button> aparte y no parte del enlace:
+         el texto lleva a la sección y la flecha abre el mega-menú. -->
+      <nav class="t-nav" aria-label="Principal">
+        <button class="t-nav-link is-current" id="t-mega-btn" type="button" aria-expanded="false" aria-controls="t-mega"
+          aria-current="page">Garaje GR<i class="t-nav-caret" aria-hidden="true"></i></button>
+        <a class="t-nav-link" href="https://toyota.com.co/deportivos-tgr/historia">Historia</a>
+        <a class="t-nav-link" href="https://toyota.com.co/noticias">Noticias</a>
+        <a class="t-nav-link" href="https://www.toyota.com.co/cotiza-tu-toyota/vehiculos-nuevos">Cotizador</a>
+        <a class="t-nav-link" href="https://www.toyota.com.co/concesionarios">Concesionarios Toyota</a>
+        <a class="t-wa"
+          href="https://api.whatsapp.com/send/?phone=573114810880&amp;text=Hola.+Quiero+m%C3%A1s+informaci%C3%B3n+sobre...&amp;type=phone_number&amp;app_absent=0"
+          aria-label="Escríbenos por WhatsApp">
+          <img src="assets/toyota/whatsapp.svg" alt="" width="20" height="20">
+        </a>
+        <a class="t-region" href="https://toyotagazooracing.com" target="_blank" rel="noopener"
+          aria-label="Sitio global de GAZOO Racing — Colombia"><svg viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3z" />
+          </svg>Colombia</a>
+      </nav>
+
+      <button class="t-burger" id="t-burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="t-mobile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          aria-hidden="true">
+          <path d="M3 6h18M3 12h18M3 18h18" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+       MEGA-MENÚ DE GARAJE GR
+       Los seis modelos, sus fotos y sus enlaces salen del menú de
+       gazooracing.com.co (API pública GetVehiclesHighlights, campos
+       vehiclename / vehicleimage / detailurl / cotizarurl / isnovedad).
+       Las fotos están descargadas en assets/menu/, no enlazadas al CDN.
+  ═══════════════════════════════════════════════════════════ -->
+    <div class="t-mega" id="t-mega">
+      <div class="wrap is-10col">
+        <p class="t-mega-tab">Deportivos GR</p>
+
+        <ul class="t-mega-grid">
+          <li class="t-mega-card">
+            <p class="t-mega-name">Corolla GR-S</p>
+            <img class="t-mega-shot" src="assets/menu/corolla-gr-s.png" alt="Toyota Corolla GR-S" width="290"
+              height="133" loading="lazy">
+            <p class="t-mega-links">
+              <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/corolla-gr-s">Ver detalles</a>
+              <a href="https://gazooracing.com.co/cotizador/corolla">Cotizar</a>
+            </p>
+          </li>
+
+          <li class="t-mega-card">
+            <p class="t-mega-name">Corolla Cross GR-S</p>
+            <img class="t-mega-shot" src="assets/menu/corolla-cross-gr-s.png" alt="Toyota Corolla Cross GR-S"
+              width="290" height="133" loading="lazy">
+            <p class="t-mega-links">
+              <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/corolla-cross-gr-s">Ver detalles</a>
+              <a href="https://gazooracing.com.co/cotizador/corolla-cross">Cotizar</a>
+            </p>
+          </li>
+
+          <li class="t-mega-card">
+            <p class="t-mega-name">GR Yaris <span class="t-mega-tag"><span>Novedad</span></span></p>
+            <img class="t-mega-shot" src="assets/menu/gr-yaris.webp" alt="Toyota GR Yaris" width="611" height="291"
+              loading="lazy">
+            <p class="t-mega-links">
+              <a href="interna-general.html">Ver detalles</a>
+              <a href="https://gazooracing.com.co/cotizador/yaris-gr">Cotizar</a>
+            </p>
+          </li>
+
+          <li class="t-mega-card">
+            <p class="t-mega-name">RAV4 PHEV GR-S <span class="t-mega-tag"><span>Novedad</span></span></p>
+            <img class="t-mega-shot" src="assets/menu/rav4-phev-gr-s.png" alt="Toyota RAV4 PHEV GR-S" width="1160"
+              height="532" loading="lazy">
+            <p class="t-mega-links">
+              <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/rav4-phev-gr-s">Ver detalles</a>
+              <a href="https://gazooracing.com.co/cotizador/rav4">Cotizar</a>
+            </p>
+          </li>
+
+          <li class="t-mega-card">
+            <p class="t-mega-name">Hilux GR-S</p>
+            <img class="t-mega-shot" src="assets/menu/hilux-gr-s.png" alt="Toyota Hilux GR-S" width="290" height="133"
+              loading="lazy">
+            <p class="t-mega-links">
+              <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/hilux-gr-s-iv">Ver detalles</a>
+              <a href="https://gazooracing.com.co/cotizador/hilux">Cotizar</a>
+            </p>
+          </li>
+
+          <li class="t-mega-card">
+            <p class="t-mega-name">Fortuner GR-S</p>
+            <img class="t-mega-shot" src="assets/menu/fortuner-gr-s.png" alt="Toyota Fortuner GR-S" width="290"
+              height="133" loading="lazy">
+            <p class="t-mega-links">
+              <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/fortuner-gr-s">Ver detalles</a>
+              <a href="https://gazooracing.com.co/cotizador/fortuner">Cotizar</a>
+            </p>
+          </li>
+
+          <li class="t-mega-card">
+            <p class="t-mega-name">Land Cruiser 300 GR-S HEV <span class="t-mega-tag"><span>Novedad</span></span></p>
+            <img class="t-mega-shot" src="assets/menu/lc300-hev-gr-s.png" alt="Toyota Land Cruiser 300 GR-S HEV"
+              width="1160" height="532" loading="lazy">
+            <p class="t-mega-links">
+              <a href="https://gazooracing.com.co/vehiculos/deportivos-tgr/lc300-hev-gr-s">Ver detalles</a>
+              <a href="https://gazooracing.com.co/cotizador/lc300-hev-gr-s">Cotizar</a>
+            </p>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <!-- Panel del header en móvil (≤900px) -->
+  <div class="t-mobile" id="t-mobile" aria-hidden="true">
+    <div class="t-mobile-head">
+      <img src="assets/icons/brand/gazoo-racing-lockup.svg" alt="GAZOO Racing" width="964" height="112">
+      <button class="t-mobile-close" id="t-mobile-close" aria-label="Cerrar menú">&#10005;</button>
+    </div>
+    <nav aria-label="Menú móvil">
+      <button class="t-mobile-flat t-mobile-flat--sub is-current" id="t-msub-open" type="button" aria-expanded="false"
+        aria-controls="t-msub" aria-current="page">Garaje GR</button>
+      <a class="t-mobile-flat" href="https://toyota.com.co/deportivos-tgr/historia">Historia</a>
+      <a class="t-mobile-flat" href="https://toyota.com.co/noticias">Noticias</a>
+
+      <div class="t-mobile-util">
+        <a href="https://www.toyota.com.co/cotiza-tu-toyota/vehiculos-nuevos">Cotizador</a>
+        <a href="https://www.toyota.com.co/concesionarios">Concesionarios Toyota</a>
+        <a class="t-mobile-wa"
+          href="https://api.whatsapp.com/send/?phone=573114810880&amp;text=Hola.+Quiero+m%C3%A1s+informaci%C3%B3n+sobre...&amp;type=phone_number&amp;app_absent=0"
+          aria-label="Escríbenos por WhatsApp">
+          <img src="assets/toyota/whatsapp.svg" alt="" width="20" height="20">
+        </a>
+        <a class="t-mobile-region" href="https://toyotagazooracing.com" target="_blank" rel="noopener"><svg
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3z" />
+          </svg>GR Global · Colombia</a>
+      </div>
+    </nav>
+
+    <!-- Sub-panel de Garaje GR. Las tarjetas NO están escritas acá: el JS las
+       clona del mega-menú del desktop para no tener los siete modelos
+       duplicados en el HTML. -->
+    <div class="t-msub" id="t-msub" aria-hidden="true">
+      <div class="t-msub-head">
+        <button class="t-msub-back" id="t-msub-back" type="button" aria-label="Volver al menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+            stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+        </button>
+        <span class="t-msub-title">Garaje GR</span>
+        <button class="t-msub-close" id="t-msub-close" type="button" aria-label="Cerrar menú">&#10005;</button>
+      </div>
+
+      <p class="t-msub-tab">Deportivos GR</p>
+      <ul class="t-msub-list" id="t-msub-list"></ul>
+    </div>
+  </div>
+
+  <main class="gr" id="gr-main">
+
+    <!-- ═══════════════════════════════════════════════════════════
+     HERO
+     El <video> es el elemento principal y el poster es lo que se ve
+     mientras carga (o si el MP4 todavía no existe). El GIF original
+     pesa 64 MB: NO se carga acá. Al soltar assets/video/gr-yaris.mp4
+     el hero pasa a movimiento solo, sin tocar código.
+═══════════════════════════════════════════════════════════ -->
+    <section class="gr-hero">
+      <!-- Los GIF vienen en dos encuadres: 1920×630 apaisado para desktop y
+       375×595 vertical para móvil. <picture> elige por breakpoint, así el
+       teléfono no descarga los 24 MB del de escritorio. Cuando existan los
+       MP4 conviene cambiar a <video> (mismo peso ÷10 aprox.). -->
+      <picture>
+        <source media="(max-width:760px)" srcset="assets/video/Yaris-Gif-Cel.gif">
+        <img class="gr-hero-media" src="assets/video/Yaris-Gif-DeskF.gif" alt="" aria-hidden="true"
+          fetchpriority="high">
+      </picture>
+      <div class="gr-hero-scrim" aria-hidden="true"></div>
+
+      <div class="gr-hero-inner">
+        <h1><img class="gr-hero-logo" src="assets/icons/brand/gazoo-racing-lockup.svg" alt="GAZOO Racing" width="964"
+            height="112"></h1>
+        <p class="gr-hero-sub">El equipo de automovilismo y los vehículos ganadores de las competencias más retadoras
+          del mundo.</p>
+        <div class="gr-hero-ctas">
+          <a class="gr-btn" href="#modelos"><span>Ver modelos GR</span></a>
+          <a class="gr-btn gr-btn--ghost" href="#historia"><span>Conoce la historia</span></a>
+        </div>
+      </div>
+
+      <a class="gr-hero-scroll" href="#modelos" aria-label="Bajar a los modelos">
+        <span>Desliza</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14M6 13l6 6 6-6" />
+        </svg>
+      </a>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+     GR GARAGE — las cards las pinta el JS desde GR_VEHICLES
+     (abajo del todo). Editar ahí, no acá.
+═══════════════════════════════════════════════════════════ -->
+    <section class="gr-section" id="modelos">
+      <!-- Dos columnas en desktop: encabezado arriba a la izquierda, navegación
+       debajo de él, carrusel a la derecha. En móvil el bloque se apila y la
+       navegación cae DESPUÉS de las cards (por eso el .gr-vnav es hermano del
+       header y no hijo: así el orden del DOM ya es el correcto y el desktop
+       lo reubica con grid). -->
+      <div class="wrap is-10col gr-models">
+        <header class="gr-models-head reveal">
+          <span class="gr-eyebrow">La gama</span>
+          <h2 class="gr-title">GR Garage</h2>
+          <p class="gr-lead"><b>GR</b>: deportivos puros de pista. <b>GR SPORT</b>: ese aprendizaje llevado a modelos de
+            calle.</p>
+        </header>
+
+        <div class="gr-vgrid" id="gr-vehicles" role="list"></div>
+
+        <div class="gr-vnav">
+          <button class="gr-vnav-btn" id="gr-veh-prev" type="button" aria-label="Modelo anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </button>
+          <button class="gr-vnav-btn" id="gr-veh-next" type="button" aria-label="Modelo siguiente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+     PÓSTER DE LA CITA
+═══════════════════════════════════════════════════════════ -->
+    <section class="gr-poster">
+      <img class="gr-poster-stripes" src="assets/elements/gr-stripes.png" alt="" aria-hidden="true" loading="lazy">
+      <div class="wrap">
+        <blockquote class="gr-poster-quote reveal">
+          <p>Nos inspiramos compitiendo en todo tipo de caminos. <em>Nos inspiramos a construir vehículos cada vez
+              mejores.</em></p>
+        </blockquote>
+
+        <div class="gr-poster-stage">
+          <div class="gr-poster-band">
+            <img src="assets/poster/franja.jpg" alt="" aria-hidden="true" width="2000" height="677" loading="lazy">
+          </div>
+          <div class="gr-poster-carwrap">
+            <img class="gr-poster-car" src="assets/poster/carro.png" alt="Toyota GR Yaris" width="2000" height="831"
+              loading="lazy">
+          </div>
+        </div>
+
+        <div class="gr-poster-foot">
+          <img class="gr-poster-logo" src="assets/icons/brand/gazoo-racing-lockup-red-bg.svg" alt="GAZOO Racing"
+            width="96" height="11" loading="lazy">
+          <img class="gr-poster-chevrons" src="assets/elements/gr-chevrons.png" alt="" aria-hidden="true"
+            loading="lazy">
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+     LOS INICIOS — cuatro hitos con foto a sangre.
+     Los rangos y resúmenes son los de toyota.com.co/deportivos-tgr/historia.
+═══════════════════════════════════════════════════════════ -->
+    <section class="gr-section" id="historia">
+      <div class="wrap is-10col">
+        <header class="gr-head reveal">
+          <span class="gr-eyebrow">1957 — Hoy</span>
+          <h2 class="gr-title">Los inicios</h2>
+          <p class="gr-lead">Cuatro etapas, del primer rally en 1957 a las coronas de resistencia.</p>
+        </header>
+
+        <ol class="gr-timeline" id="gr-timeline">
+          <li class="gr-tl-card reveal">
+            <img class="gr-tl-photo" src="assets/historia/1957.jpg" alt="" loading="lazy" decoding="async">
+            <span class="gr-tl-scrim" aria-hidden="true"></span>
+            <div class="gr-tl-body">
+              <div class="gr-tl-top"><span class="gr-tl-year">1957 <em>//</em> 1986</span></div>
+              <div class="gr-tl-main">
+                <h3 class="gr-tl-title">El primer rally</h3>
+                <p class="gr-tl-text">La historia del automovilismo para Toyota comienza en un rally.</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="gr-tl-card reveal" data-d="1">
+            <img class="gr-tl-photo" src="assets/historia/1994.jpg" alt="" loading="lazy" decoding="async">
+            <span class="gr-tl-scrim" aria-hidden="true"></span>
+            <div class="gr-tl-body">
+              <div class="gr-tl-top"><span class="gr-tl-year">1990 <em>//</em> 1999</span></div>
+              <div class="gr-tl-main">
+                <!-- nbsp: sin esto rompía en "EN LA CIMA DEL / WRC" y dejaba el WRC solo -->
+                <h3 class="gr-tl-title">En la cima del&nbsp;WRC</h3>
+                <p class="gr-tl-text">En los 90, Toyota alcanzó una gran racha ganadora.</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="gr-tl-card reveal" data-d="2">
+            <img class="gr-tl-photo" src="assets/historia/2018.jpg" alt="" loading="lazy" decoding="async">
+            <span class="gr-tl-scrim" aria-hidden="true"></span>
+            <div class="gr-tl-body">
+              <div class="gr-tl-top"><span class="gr-tl-year">2000 <em>//</em> 2018</span></div>
+              <div class="gr-tl-main">
+                <h3 class="gr-tl-title">El regreso</h3>
+                <p class="gr-tl-text">Toyota regresa al campeonato mundial de rally.</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="gr-tl-card gr-tl-card--now reveal" data-d="3">
+            <img class="gr-tl-photo" src="assets/historia/2022.jpg" alt="" loading="lazy" decoding="async">
+            <span class="gr-tl-scrim" aria-hidden="true"></span>
+            <div class="gr-tl-body">
+              <div class="gr-tl-top"><span class="gr-tl-year">2018 <em>//</em> Hoy</span></div>
+              <div class="gr-tl-main">
+                <h3 class="gr-tl-title">Corona y nombre</h3>
+                <p class="gr-tl-text">Tres coronas seguidas del FIA WEC. En 2026 suelta el prefijo y vuelve a llamarse
+                  GAZOO Racing.</p>
+              </div>
+            </div>
+          </li>
+        </ol>
+
+        <!-- Navegación del carrusel — solo aparece en móvil, que es donde la
+         línea de tiempo deja de ser reja y pasa a una card por vista. -->
+        <div class="gr-vnav gr-tl-nav">
+          <button class="gr-vnav-btn" id="gr-tl-prev" type="button" aria-label="Etapa anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </button>
+          <span class="gr-vnav-count" id="gr-tl-count" aria-live="polite">1 de 4</span>
+          <button class="gr-vnav-btn" id="gr-tl-next" type="button" aria-label="Etapa siguiente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Va acá en el DOM, después de la navegación del carrusel, porque ese
+         es su sitio en móvil. En desktop el grid lo sube a la fila del
+         encabezado, a la derecha del texto. -->
+        <a class="gr-btn gr-btn--red gr-tl-more" href="https://toyota.com.co/deportivos-tgr/historia"><span>Conoce
+            más</span></a>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+     GALERÍA — el respiro claro entre el negro de la historia y el
+     negro del cierre. Bento de 6 piezas que llena una reja de 4×3.
+═══════════════════════════════════════════════════════════ -->
+    <section class="gr-gallery" id="galeria">
+      <div class="wrap is-10col">
+        <header class="gr-head reveal">
+          <span class="gr-eyebrow">Galería</span>
+          <h2 class="gr-title">Forjado en pista</h2>
+          <p class="gr-lead">Los GR en su terreno: ruta, pista y nieve.</p>
+        </header>
+
+        <div class="gr-gal-grid" id="gr-gallery-grid">
+          <button class="gr-gal-item reveal" type="button" data-cap="GR86">
+            <img src="assets/imgs/gr86-tunnel.jpg" alt="Toyota GR86 en carretera de montaña" loading="lazy"
+              decoding="async">
+            <span class="gr-gal-cap">GR86</span>
+          </button>
+          <button class="gr-gal-item reveal" type="button" data-cap="En ruta">
+            <img src="assets/imgs/gr86-road-rear.jpg" alt="Toyota GR86 de perfil trasero en ruta" loading="lazy"
+              decoding="async">
+            <span class="gr-gal-cap">En ruta</span>
+          </button>
+          <button class="gr-gal-item reveal" type="button" data-cap="Interior">
+            <img src="assets/imgs/gr86-interior.jpg" alt="Interior del Toyota GR86" loading="lazy" decoding="async">
+            <span class="gr-gal-cap">Interior</span>
+          </button>
+          <button class="gr-gal-item reveal" type="button" data-cap="Nieve">
+            <img src="assets/imgs/gr86-snow.jpg" alt="Toyota GR86 sobre nieve" loading="lazy" decoding="async">
+            <span class="gr-gal-cap">Nieve</span>
+          </button>
+          <button class="gr-gal-item reveal" type="button" data-cap="En pista">
+            <img src="assets/imgs/gr86-front-duo.jpg" alt="Dos Toyota GR86 de frente en pista" loading="lazy"
+              decoding="async">
+            <span class="gr-gal-cap">En pista</span>
+          </button>
+          <button class="gr-gal-item reveal" type="button" data-cap="GR86 · Perfil">
+            <img src="assets/imgs/gr86-red-profile.jpg" alt="Toyota GR86 rojo de perfil" loading="lazy"
+              decoding="async">
+            <span class="gr-gal-cap">GR86 · Perfil</span>
+          </button>
+        </div>
+
+        <p class="gr-disclaimer">*Imágenes de referencia</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+     BOUTIQUE — en el kiosko el CTA era un QR (no había navegador);
+     acá es un enlace directo al marketplace.
+═══════════════════════════════════════════════════════════ -->
+    <section class="gr-boutique" id="boutique">
+      <img class="gr-bq-stripes" src="assets/elements/gr-stripes.png" alt="" aria-hidden="true" loading="lazy">
+      <div class="wrap is-10col gr-bq-inner">
+        <h2 class="gr-bq-title reveal">Boutique GR</h2>
+        <p class="gr-bq-lead reveal" data-d="1">Llévate la marca contigo.</p>
+
+        <div class="gr-bq-card reveal" data-d="2">
+          <div class="gr-bq-shot">
+            <img src="assets/boutique/boutique-img.jpg" alt="Buzos oficiales GAZOO Racing Colombia" loading="lazy"
+              decoding="async">
+          </div>
+          <div class="gr-bq-detail">
+            <img class="gr-bq-logo" src="assets/icons/brand/gr-logo.png" alt="" aria-hidden="true" width="213"
+              height="104">
+            <h3 class="gr-bq-name">Marketplace Colombia</h3>
+            <p class="gr-bq-copy">Ropa y accesorios oficiales de GAZOO Racing Colombia, con despacho a todo el país.</p>
+            <a class="gr-btn" href="https://www.toyota.com.co/deportivos-tgr/marketplace?type=boutique-gazoo-racing">
+              <span>Ver la boutique
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                  stroke-linejoin="round" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+     SÍGUENOS
+═══════════════════════════════════════════════════════════ -->
+    <section class="gr-social">
+      <div class="wrap">
+        <div class="gr-social-panel reveal">
+          <div class="gr-social-text">
+            <span class="gr-eyebrow">Comunidad</span>
+            <h2 class="gr-title">Síguenos</h2>
+            <p class="gr-lead">Lo que hace GAZOO Racing en Colombia, en tu teléfono. Sigue en Instagram todo lo que hace
+              GAZOO Racing en Colombia.</p>
+            <a class="gr-social-cta" href="https://www.instagram.com/toyotacolombia/" target="_blank" rel="noopener">
+              <span class="gr-social-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                  <rect x="3" y="3" width="18" height="18" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
+                </svg>
+              </span>
+              <span class="gr-social-net">@toyotacolombia</span>
+              <span class="gr-social-go" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
+            </a>
+          </div>
+          <picture>
+            <source media="(max-width:760px)" srcset="assets/siguenos/rav4-gr-sport-mobile.png">
+            <img class="gr-social-shot" src="assets/siguenos/rav4-gr-sport.png" alt="" aria-hidden="true" loading="lazy"
+              decoding="async" width="3060" height="990">
+          </picture>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+     CIERRE
+═══════════════════════════════════════════════════════════ -->
+    <section class="gr-outro">
+      <div class="wrap gr-outro-inner">
+        <img class="gr-outro-logo reveal" src="assets/icons/brand/gazoo-racing-lockup.svg" alt="GAZOO Racing"
+          width="964" height="112" loading="lazy">
+        <p class="gr-outro-claim reveal" data-d="1">La competencia hace mejores a los autos. Y a las personas.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════
+     LIGHTBOX de la galería
+═══════════════════════════════════════════════════════════ -->
+  <div class="gr-lb" id="gr-lb" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Visor de galería">
+    <div class="gr-lb-backdrop" data-lb-close></div>
+    <div class="gr-lb-frame">
+      <img class="gr-lb-img" id="gr-lb-img" alt=""><!-- src lo pone el JS al abrir -->
+      <button class="gr-lb-close" id="gr-lb-close" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+          aria-hidden="true">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+        <span>Cerrar</span>
+      </button>
+    </div>
+    <button class="gr-lb-nav gr-lb-prev" id="gr-lb-prev" type="button" aria-label="Imagen anterior">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+        stroke-linejoin="round" aria-hidden="true">
+        <path d="M15 5l-7 7 7 7" />
+      </svg>
+    </button>
+    <button class="gr-lb-nav gr-lb-next" id="gr-lb-next" type="button" aria-label="Imagen siguiente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+        stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+    <div class="gr-lb-cap">
+      <span class="gr-lb-label" id="gr-lb-label"></span>
+      <span class="gr-lb-count" id="gr-lb-count"></span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+     FOOTER GR
+     Contenido (columnas, enlaces y legales) del footer real de
+     gazooracing.com.co; la estructura es la nuestra:
+       1 · logo a la izquierda + las cuatro columnas a su derecha
+       2 · legales + Instagram
+       3 · copyright
+       4 · accesibilidad / privacidad / cookies
+═══════════════════════════════════════════════════════════ -->
+  <footer class="t-footer">
+
+    <div class="wrap is-10col t-footer-top">
+
+      <a class="t-footer-brand" href="https://www.toyota.com.co/deportivos-tgr/inicio"
+        aria-label="GAZOO Racing Colombia — Inicio">
+        <img class="t-footer-logo" src="assets/icons/brand/gazoo-racing-lockup.svg" alt="GAZOO Racing" width="964"
+          height="112" loading="lazy">
+      </a>
+
+      <div class="t-footer-cols">
+
+        <div class="t-footer-col">
+          <button class="t-footer-acc-btn" type="button" aria-expanded="false">Vehículos <span class="t-footer-acc-icon"
+              aria-hidden="true">+</span></button>
+          <span class="t-footer-title">Vehículos</span>
+          <div class="t-footer-body">
+            <div>
+              <div class="t-footer-list">
+                <a href="https://www.toyota.com.co/cotiza-tu-toyota/vehiculos-nuevos">Toyota</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="t-footer-col">
+          <button class="t-footer-acc-btn" type="button" aria-expanded="false">Acerca de GR <span
+              class="t-footer-acc-icon" aria-hidden="true">+</span></button>
+          <span class="t-footer-title">Acerca de GR</span>
+          <div class="t-footer-body">
+            <div>
+              <div class="t-footer-list">
+                <a href="https://www.toyota.com.co/mi-toyota/campanas-de-seguridad-y-servicios">Campañas de
+                  seguridad</a>
+                <a href="https://www.toyota.com.co/mi-toyota/mantenimiento">Mantenimiento Toyota</a>
+                <a href="https://www.toyota.com.co/cotiza-tu-toyota/financiacion-toyota">Financia tu Toyota</a>
+                <a href="https://www.toyota.com.co/noticias">Noticias</a>
+                <a href="https://www.toyota.com.co/deportivos-tgr/inicio">GAZOO Racing</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="t-footer-col">
+          <button class="t-footer-acc-btn" type="button" aria-expanded="false">Enlaces Útiles <span
+              class="t-footer-acc-icon" aria-hidden="true">+</span></button>
+          <span class="t-footer-title">Enlaces Útiles</span>
+          <div class="t-footer-body">
+            <div>
+              <div class="t-footer-list">
+                <a href="https://www.kinto-mobility.com.co/kinto-share#no-back">Alquila tu Toyota</a>
+                <a href="https://www.canaldeintegridadtoyotacolombia.com/">Canal de Integridad</a>
+                <a href="https://www.toyota.com.co/pqrs">PQR</a>
+                <a
+                  href="https://www.supersociedades.gov.co/es/web/asuntos-economicos-societarios/denuncias-soborno-transnacional">Denuncias
+                  sobre soborno transnacional</a>
+                <a href="https://portal.paco.gov.co/index.php?pagina=denuncie">Denuncias sobre Actos de corrupción</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="t-footer-col">
+          <button class="t-footer-acc-btn" type="button" aria-expanded="false">Contáctanos <span
+              class="t-footer-acc-icon" aria-hidden="true">+</span></button>
+          <span class="t-footer-title">Contáctanos</span>
+          <div class="t-footer-body">
+            <div>
+              <div class="t-footer-list">
+                <a href="https://www.toyota.com.co/cotiza-tu-toyota/vehiculos-nuevos">Cotizador</a>
+                <a href="https://www.toyota.com.co/contacto">Contacto</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="wrap is-10col">
+
+      <div class="t-footer-brands">
+        <a href="https://global.toyota/" target="_blank" rel="noopener" aria-label="Toyota — sitio global"><img
+            src="assets/toyota/logo.svg" alt="Toyota" width="170" height="29" loading="lazy"></a>
+        <a href="https://toyotagazooracing.com" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3z" />
+          </svg>GR Global · Colombia</a>
+      </div>
+
+      <div class="t-footer-mid">
+        <div class="t-footer-links">
+          <a href="#">Política de seguridad SGCS</a>
+          <a href="#">Términos y Condiciones</a>
+          <a href="#">Políticas y Privacidad</a>
+          <a href="https://www.toyota.com.co/pqrs">PQR</a>
+          <a href="#">Accesibilidad</a>
+          <a href="#">Opciones de Privacidad</a>
+          <a href="#">Consentimiento de Cookies</a>
+        </div>
+
+        <!-- Solo Instagram, igual que gazooracing.com.co. Los PNG de Facebook,
+           YouTube, X y TikTok siguen en assets/toyota/ por si vuelven. -->
+        <div class="t-footer-social">
+          <a href="https://www.instagram.com/toyotacolombia/" target="_blank" rel="noopener" aria-label="Instagram">
+            <img src="assets/toyota/instagram.png" alt="" loading="lazy"></a>
+        </div>
+      </div>
+
+      <div class="t-footer-legal">
+        <span>&copy; 2026 Automotores Toyota Colombia S.A.S.</span>
+        <span>Todos los derechos reservados.</span>
+        <span>La información aquí presente se aplica solo a vehículos en Colombia.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* ══════════════════════════════════════════════════════════
+         1 · DATOS DE LA GAMA GR
+         Único lugar donde se editan los modelos. Familias del manual
+         GR Brand Migration Ver.7:
+           GR       → deportivos puros      [GR] + [Modelo]
+           GR SPORT → modelos de calle      [Modelo] + [GR SPORT]
+    
+         Los chips van SIEMPRE de a cuatro y en el mismo orden:
+           1 motor · 2 potencia · 3 transmisión · 4 tracción o capacidad
+         Las potencias salen de las fichas GR-Sport del catálogo Colombia.
+         Excepción: los 306 CV del RAV4 PHEV son la cifra global del PHEV
+         — conviene confirmarla contra la ficha local antes de publicar.
+      ══════════════════════════════════════════════════════════ */
+      var ICON = {
+        turbo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="2.4"/><path d="M12 4.8v2.8M19.2 12h-2.8M12 19.2v-2.8M4.8 12h2.8"/></svg>',
+        power: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.2 2 4.6 13.4h6.1L9.4 22l8.9-11.7h-6.2z"/></svg>',
+        gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 5.5v13M17 5.5v13M7 12h10"/><circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none"/></svg>',
+        engine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8.5A2.5 2.5 0 0 1 6.5 6h5A2.5 2.5 0 0 1 14 8.5V20"/><path d="M3 20h12M14 11.5h2.6a2 2 0 0 1 2 2v3.4a1.45 1.45 0 0 0 2.9 0v-6.6l-2.4-2.4"/></svg>',
+        seats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="3.1"/><path d="M5.6 20a6.4 6.4 0 0 1 12.8 0"/></svg>',
+        awd: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="7" r="2.3"/><circle cx="17" cy="7" r="2.3"/><circle cx="7" cy="17" r="2.3"/><circle cx="17" cy="17" r="2.3"/><path d="M9.3 7h5.4M9.3 17h5.4M7 9.3v5.4M17 9.3v5.4"/></svg>',
+        hybrid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="7.2" width="15.4" height="9.6" rx="2.2"/><path d="M20.6 10.6v2.8"/><path d="M10.9 9.9 8.4 13.1h3.2l-1 2.6"/></svg>'
+      };
+
+      var TOYOTA = 'https://www.toyota.com.co';
+
+      var GR_VEHICLES = [
+        {
+          name: 'GR Yaris', variant: '', img: 'assets/cutouts/gr-yaris.png',
+          url: 'interna-general.html',
+          chips: [['turbo', '1.6L Turbo'], ['power', '261 CV'], ['gear', 'Manual 6 vel.'], ['awd', 'GR-FOUR AWD']],
+          desc: 'Homologado para rally: tracción GR-FOUR y tres cilindros turbo.'
+        },
+
+        {
+          name: 'Corolla', variant: 'GR Sport', img: 'assets/cutouts/corolla-gr.png',
+          url: TOYOTA + '/vehicle-details/page?slug=corolla',
+          chips: [['engine', '2.0L Gasolina'], ['power', '171 CV'], ['gear', 'CVT 10 vel.'], ['seats', '5 pasajeros']],
+          desc: 'Sedán con suspensión y dirección recalibradas, y carrocería reforzada.'
+        },
+
+        {
+          name: 'Corolla Cross', variant: 'GR Sport', img: 'assets/cutouts/corolla-cross-gr.png',
+          url: TOYOTA + '/vehicle-details/page?slug=corolla-cross',
+          chips: [['engine', '2.0L Gasolina'], ['power', '171 CV'], ['gear', 'CVT 10 vel.'], ['seats', '5 pasajeros']],
+          desc: 'La SUV compacta con el ajuste de chasis y la estética GR.'
+        },
+
+        {
+          name: 'Hilux', variant: 'GR Sport IV', img: 'assets/cutouts/hilux-gr.png',
+          url: TOYOTA + '/vehicle-details/page?slug=hilux',
+          chips: [['engine', '2.8L Turbo Diésel'], ['power', '224 CV'], ['gear', 'Automática 6 vel.'], ['awd', '4X4']],
+          desc: 'Pick up con suspensión de desempeño, trocha ampliada y frenos de mayor capacidad.'
+        },
+
+        {
+          name: 'RAV4 PHEV', variant: 'GR Sport', img: 'assets/cutouts/rav4-phev-gr-s.png',
+          url: TOYOTA + '/vehicle-details/page?slug=rav4',
+          chips: [['hybrid', 'Híbrida enchufable'], ['power', '306 CV'], ['gear', 'e-CVT'], ['awd', 'AWD']],
+          desc: 'Híbrida enchufable con tracción eléctrica al eje trasero y ajuste GR.'
+        },
+
+        {
+          name: 'Land Cruiser 300', variant: 'GR Sport', img: 'assets/cutouts/lc-300-gr.png',
+          url: TOYOTA + '/vehicle-details/page?slug=land-cruiser-300',
+          chips: [['hybrid', 'Híbrida'], ['power', '415 CV'], ['gear', 'Automática 10 vel.'], ['awd', '4X4']],
+          desc: 'El tope de gama con diferenciales delantero y trasero bloqueables.'
+        },
+
+        {
+          name: 'Fortuner', variant: 'GR Sport', img: 'assets/cutouts/fortuner-gr.png',
+          url: TOYOTA + '/vehicle-details/page?slug=fortuner',
+          chips: [['engine', '2.8L Turbo Diésel'], ['power', '224 CV'], ['gear', 'Automática 6 vel.'], ['seats', '7 pasajeros']],
+          desc: 'SUV de siete pasajeros con puesta a punto GR y tracción 4X4.'
+        }
+      ];
+
+      var vgrid = document.getElementById('gr-vehicles');
+      if (vgrid) {
+        vgrid.innerHTML = GR_VEHICLES.map(function (v) {
+          var chips = v.chips.map(function (c) {
+            return '<span class="gr-chip"><span>' + (ICON[c[0]] || '') + c[1] + '</span></span>';
+          }).join('');
+          return '' +
+            '<article class="gr-vcard" role="listitem">' +
+            '<div class="gr-vcard-body">' +
+            '<div class="gr-vcard-photo">' +
+            '<img src="' + v.img + '" alt="Toyota ' + v.name + ' ' + v.variant + '" loading="lazy" decoding="async">' +
+            '</div>' +
+            '<div class="gr-vcard-info">' +
+            '<div class="gr-chips">' + chips + '</div>' +
+            '<h3 class="gr-vcard-name">' + v.name +
+            (v.variant ? '<span class="gr-vcard-variant">' + v.variant + '</span>' : '') +
+            '</h3>' +
+            '<p class="gr-vcard-desc">' + v.desc + '</p>' +
+            '<a class="gr-btn gr-vcard-cta" href="' + v.url + '">' +
+            '<span>Conocer detalles' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>' +
+            '</span>' +
+            '</a>' +
+            '</div>' +
+            '</div>' +
+            '</article>';
+        }).join('');
+      }
+
+      /* ══════════════════════════════════════════════════════════
+         2 · CARRUSELES (GR Garage y línea de tiempo)
+         scroll-snap nativo + botones. Misma mecánica para los dos, así
+         que va en una función: el paso se recalcula en cada uso porque
+         el ancho de card depende del viewport (todo es clamp/vw/cqi).
+         La línea de tiempo solo es carrusel bajo 760 px; arriba es una
+         reja y los botones están ocultos por CSS, sync() no estorba.
+      ══════════════════════════════════════════════════════════ */
+      function grCarousel(trackId, prevId, nextId, countId) {
+        var track = document.getElementById(trackId);
+        var prev = document.getElementById(prevId);
+        var next = document.getElementById(nextId);
+        var count = document.getElementById(countId);
+        if (!track || !prev || !next) return;
+
+        function step() {
+          var first = track.children[0];
+          if (!first) return 0;
+          var gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+          return first.getBoundingClientRect().width + gap;
+        }
+        function sync() {
+          if (!track.clientWidth) return;
+          var total = track.children.length;
+          var s = step();
+          var idx = s ? Math.round(track.scrollLeft / s) : 0;
+          if (count) count.textContent = Math.min(idx + 1, total) + ' de ' + total;
+          prev.disabled = track.scrollLeft <= 1;
+          next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 1;
+        }
+        // Con scroll-behavior:smooth el scrollLeft final no está listo al
+        // instante y el evento 'scroll' no es fiable en todos los motores:
+        // se sincroniza enseguida y otra vez al terminar la animación.
+        function nudge(dir) {
+          track.scrollLeft += dir * step();
+          setTimeout(sync, 60);
+          setTimeout(sync, 450);
+        }
+        prev.addEventListener('click', function () { nudge(-1); });
+        next.addEventListener('click', function () { nudge(1); });
+        window.addEventListener('resize', sync);
+        var t;
+        track.addEventListener('scroll', function () {
+          clearTimeout(t); t = setTimeout(sync, 120);
+        }, { passive: true });
+        sync();
+      }
+
+      grCarousel('gr-vehicles', 'gr-veh-prev', 'gr-veh-next', 'gr-veh-count');
+      grCarousel('gr-timeline', 'gr-tl-prev', 'gr-tl-next', 'gr-tl-count');
+
+      /* ══════════════════════════════════════════════════════════
+         3a · MEGA-MENÚ DE GARAJE GR
+         Lo abre el galón del header, no el enlace: el texto sigue
+         llevando a la sección de modelos de la página.
+      ══════════════════════════════════════════════════════════ */
+      (function () {
+        var btn = document.getElementById('t-mega-btn');
+        var mega = document.getElementById('t-mega');
+        if (!btn || !mega) return;
+
+        function setOpen(open) {
+          mega.classList.toggle('is-open', open);
+          btn.setAttribute('aria-expanded', String(open));
+        }
+        function isOpen() { return btn.getAttribute('aria-expanded') === 'true'; }
+
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          setOpen(!isOpen());
+        });
+        // Cerrar al elegir un modelo, al hacer clic fuera o con Escape.
+        mega.addEventListener('click', function (e) {
+          if (e.target.closest('a')) setOpen(false);
+          else e.stopPropagation();
+        });
+        document.addEventListener('click', function () { if (isOpen()) setOpen(false); });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && isOpen()) { setOpen(false); btn.focus(); }
+        });
+
+        /* ── Versión móvil: sub-panel deslizante dentro del menú hamburguesa ──
+           Las tarjetas se clonan del mega-menú para no repetir los siete modelos
+           en el HTML: una sola fuente de verdad. */
+        var sub = document.getElementById('t-msub');
+        var subList = document.getElementById('t-msub-list');
+        var subOpen = document.getElementById('t-msub-open');
+        var subBack = document.getElementById('t-msub-back');
+        var subX = document.getElementById('t-msub-close');
+        var grid = mega.querySelector('.t-mega-grid');
+        if (!sub || !subList || !subOpen || !grid) return;
+
+        subList.innerHTML = grid.innerHTML;
+
+        function setSub(open) {
+          sub.classList.toggle('is-open', open);
+          sub.setAttribute('aria-hidden', String(!open));
+          subOpen.setAttribute('aria-expanded', String(open));
+          if (open) sub.scrollTop = 0;
+        }
+        subOpen.addEventListener('click', function () { setSub(true); });
+        if (subBack) subBack.addEventListener('click', function () { setSub(false); });
+        // La ✕ cierra el menú entero, no solo el sub-panel.
+        if (subX) subX.addEventListener('click', function () {
+          setSub(false);
+          var close = document.getElementById('t-mobile-close');
+          if (close) close.click();
+        });
+        // Al elegir un modelo se cierran los dos.
+        subList.addEventListener('click', function (e) {
+          if (!e.target.closest('a')) return;
+          setSub(false);
+          var close = document.getElementById('t-mobile-close');
+          if (close) close.click();
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && sub.classList.contains('is-open')) setSub(false);
+        });
+      }());
+
+      /* ══════════════════════════════════════════════════════════
+         3 · HEADER GR — panel móvil
+         El panel ya está escrito en el HTML (son cuatro enlaces): no
+         se genera desde el desktop como hacía el header de Toyota.
+      ══════════════════════════════════════════════════════════ */
+      (function () {
+        var panel = document.getElementById('t-mobile');
+        var burger = document.getElementById('t-burger');
+        var closeBtn = document.getElementById('t-mobile-close');
+        if (!panel || !burger) return;
+
+        function openPanel() {
+          panel.classList.add('is-open');
+          panel.setAttribute('aria-hidden', 'false');
+          burger.setAttribute('aria-expanded', 'true');
+          document.body.style.overflow = 'hidden';
+        }
+        function closePanel() {
+          panel.classList.remove('is-open');
+          panel.setAttribute('aria-hidden', 'true');
+          burger.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        }
+        burger.addEventListener('click', openPanel);
+        if (closeBtn) closeBtn.addEventListener('click', closePanel);
+        panel.addEventListener('click', function (e) {
+          if (e.target.closest('a')) closePanel();
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && panel.classList.contains('is-open')) closePanel();
+        });
+      }());
+
+      /* ══════════════════════════════════════════════════════════
+         4 · ACORDEÓN DEL FOOTER (solo móvil)
+      ══════════════════════════════════════════════════════════ */
+      document.querySelectorAll('.t-footer-acc-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var open = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', String(!open));
+        });
+      });
+
+      /* ══════════════════════════════════════════════════════════
+         5 · LIGHTBOX de la galería
+      ══════════════════════════════════════════════════════════ */
+      (function () {
+        var lb = document.getElementById('gr-lb');
+        var grid = document.getElementById('gr-gallery-grid');
+        if (!lb || !grid) return;
+
+        var img = document.getElementById('gr-lb-img');
+        var label = document.getElementById('gr-lb-label');
+        var count = document.getElementById('gr-lb-count');
+        var btns = Array.prototype.slice.call(grid.querySelectorAll('.gr-gal-item'));
+        var items = btns.map(function (b) {
+          var i = b.querySelector('img');
+          return { src: i.getAttribute('src'), alt: i.getAttribute('alt') || '', cap: b.dataset.cap || '' };
+        });
+        var idx = 0, lastFocus = null;
+
+        function paint() {
+          var it = items[idx];
+          img.src = it.src;
+          img.alt = it.alt;
+          label.textContent = it.cap;
+          count.textContent = (idx + 1) + ' / ' + items.length;
+        }
+        function open(i) {
+          idx = i; lastFocus = document.activeElement;
+          paint();
+          lb.setAttribute('aria-hidden', 'false');
+          document.body.classList.add('gr-lb-open');
+          document.getElementById('gr-lb-close').focus();
+        }
+        function close() {
+          lb.setAttribute('aria-hidden', 'true');
+          document.body.classList.remove('gr-lb-open');
+          if (lastFocus) lastFocus.focus();
+        }
+        function move(d) {
+          idx = (idx + d + items.length) % items.length;
+          if (reduceMotion) { paint(); return; }
+          img.style.opacity = '0';
+          setTimeout(function () { paint(); img.style.opacity = '1'; }, 130);
+        }
+
+        img.style.transition = 'opacity .2s ease';
+        btns.forEach(function (b, i) { b.addEventListener('click', function () { open(i); }); });
+        document.getElementById('gr-lb-close').addEventListener('click', close);
+        document.getElementById('gr-lb-prev').addEventListener('click', function () { move(-1); });
+        document.getElementById('gr-lb-next').addEventListener('click', function () { move(1); });
+        lb.querySelectorAll('[data-lb-close]').forEach(function (el) {
+          el.addEventListener('click', close);
+        });
+        document.addEventListener('keydown', function (e) {
+          if (lb.getAttribute('aria-hidden') === 'true') return;
+          if (e.key === 'Escape') close();
+          if (e.key === 'ArrowLeft') move(-1);
+          if (e.key === 'ArrowRight') move(1);
+        });
+        // Swipe en táctil
+        var x0 = null;
+        lb.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+        lb.addEventListener('touchend', function (e) {
+          if (x0 === null) return;
+          var dx = e.changedTouches[0].clientX - x0;
+          if (Math.abs(dx) > 50) move(dx > 0 ? -1 : 1);
+          x0 = null;
+        }, { passive: true });
+      }());
+
+      /* ══════════════════════════════════════════════════════════
+         6 · REVEAL al hacer scroll
+      ══════════════════════════════════════════════════════════ */
+      (function () {
+        var els = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+        if (!els.length) return;
+        if (reduceMotion || !('IntersectionObserver' in window)) {
+          els.forEach(function (el) { el.classList.add('is-in'); });
+          return;
+        }
+        var obs = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) {
+            if (!en.isIntersecting) return;
+            en.target.classList.add('is-in');
+            obs.unobserve(en.target);
+          });
+        }, { rootMargin: '0px 0px -12% 0px', threshold: .1 });
+        els.forEach(function (el) { obs.observe(el); });
+      }());
+
+    }());
+  </script>
+
+</body>
+
+</html>
