@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="1190" viewBox="0 0 1920 595" font-family="Menlo, monospace">
+  <!-- Plantilla del banner de modelo · DESKTOP 3840×1190 (≈3,23:1)
+       Coordenadas en la mitad (1920×595), que es como se ve a 1920 px.
+       Auto CENTRADO. A otros anchos las zonas escalan casi
+       proporcionales: dejar aire dentro de ellas. -->
+  <rect width="1920" height="595" fill="#1b1b1f"/>
+  <rect x="0" y="0" width="195" height="595" fill="#ffd400" fill-opacity=".10"/>
+  <rect x="1725" y="0" width="195" height="595" fill="#ffd400" fill-opacity=".10"/>
+  <rect x="195" y="0" width="1530" height="595" fill="none" stroke="#ffd400" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="205" y="22" fill="#ffd400" font-size="16">ÁREA DE RESPETO · 195 px por lado (390 en el archivo) · en pantalla puede recortarse</text>
+  <rect x="195" y="30" width="420" height="20" fill="#ffffff" fill-opacity=".12"/>
+  <text x="205" y="45" fill="#fff" fill-opacity=".7" font-size="13">miga de pan</text>
+  <!-- Zona segura del vehículo: tercio central -->
+  <rect x="576" y="54" width="768" height="446" fill="#00e5ff" fill-opacity=".10" stroke="#00e5ff" stroke-width="3" stroke-dasharray="14 10"/>
+  <text x="960" y="84" fill="#00e5ff" font-size="20" text-anchor="middle">ZONA SEGURA · VEHÍCULO</text>
+  <text x="960" y="108" fill="#00e5ff" font-size="14" text-anchor="middle">el auto completo y centrado · ruedas sobre la línea de 500</text>
+  <!-- Nombre -->
+  <rect x="195" y="300" width="372" height="200" fill="#7CFF4F" fill-opacity=".10" stroke="#7CFF4F" stroke-width="3" stroke-dasharray="14 10"/>
+  <text x="209" y="326" fill="#7CFF4F" font-size="18">NOMBRE</text>
+  <text x="209" y="348" fill="#7CFF4F" font-size="13">hasta 3 líneas · fondo oscuro</text>
+  <!-- Precio -->
+  <rect x="1353" y="380" width="372" height="120" fill="#7CFF4F" fill-opacity=".10" stroke="#7CFF4F" stroke-width="3" stroke-dasharray="14 10"/>
+  <text x="1711" y="406" fill="#7CFF4F" font-size="18" text-anchor="end">PRECIO</text>
+  <text x="1711" y="428" fill="#7CFF4F" font-size="13" text-anchor="end">fondo oscuro</text>
+  <!-- Legales y sellos -->
+  <rect x="195" y="500" width="1530" height="95" fill="#ff4fd8" fill-opacity=".10" stroke="#ff4fd8" stroke-width="3" stroke-dasharray="14 10"/>
+  <text x="209" y="553" fill="#ff4fd8" font-size="16">LEGALES</text>
+  <text x="1711" y="553" fill="#ff4fd8" font-size="16" text-anchor="end">SELLOS DE SEGURIDAD</text>
+</svg>

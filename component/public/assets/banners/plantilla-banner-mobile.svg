@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="667" viewBox="0 0 1000 667" font-family="Menlo, monospace">
+  <!-- Plantilla del banner de modelo · MÓVIL 1000×667 (3:2)
+       En móvil y tablet el texto va DEBAJO de la foto: acá solo hay
+       que dejar el auto completo dentro de la zona segura. -->
+  <rect width="1000" height="667" fill="#1b1b1f"/>
+  <rect x="60" y="40" width="880" height="587" fill="#00e5ff" fill-opacity=".10" stroke="#00e5ff" stroke-width="3" stroke-dasharray="12 8"/>
+  <text x="500" y="80" fill="#00e5ff" font-size="24" text-anchor="middle">ZONA SEGURA · VEHÍCULO</text>
+  <text x="500" y="110" fill="#00e5ff" font-size="16" text-anchor="middle">margen de 6 % por lado</text>
+</svg>
